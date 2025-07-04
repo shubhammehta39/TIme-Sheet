@@ -29,7 +29,9 @@ MASTER_SHEET_ID = "1keBMyJdHJIeHrCsM70_xJlq4lugoHJibTelqKP_S3hs"
 EMPLOYEE_SHEET_NAME = "Employee Detail"
 
 # --- AUTHENTICATION ---
-creds = service_account.Credentials.from_service_account_file(CREDENTIALS_PATH, scopes=SCOPES)
+#creds = service_account.Credentials.from_service_account_file(CREDENTIALS_PATH, scopes=SCOPES)
+service_account_info = st.secrets["gcp_service_account"]
+creds = service_account.Credentials.from_service_account_info(service_account_info, scopes=SCOPES)
 drive_service = build("drive", "v3", credentials=creds)
 sheets_service = build("sheets", "v4", credentials=creds)
 
