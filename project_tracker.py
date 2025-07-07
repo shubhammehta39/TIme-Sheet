@@ -25,7 +25,9 @@ SHEET_URLS = {
 }
 
 CREDENTIALS_PATH = "credentials.json"
-MASTER_SHEET_ID = "1keBMyJdHJIeHrCsM70_xJlq4lugoHJibTelqKP_S3hs"
+load_dotenv()  # loads .env file into environment variables
+MASTER_SHEET_ID = os.getenv("MASTER_ID")
+
 EMPLOYEE_SHEET_NAME = "Employee Detail"
 
 # --- AUTHENTICATION ---
