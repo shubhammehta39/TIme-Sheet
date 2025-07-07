@@ -7,6 +7,8 @@ from datetime import datetime
 import time
 import io
 import plotly.io as pio
+from dotenv import load_dotenv
+import os
 
 # --- CONFIGURATION ---
 SCOPES = [
