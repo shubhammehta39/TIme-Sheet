@@ -39,6 +39,34 @@ sheets_service = build("sheets", "v4", credentials=creds)
 
 st.set_page_config(page_title="📊 Project Tracker Dashboard", layout="wide")
 st.title("📊 Project Work Tracker")
+# --- USER LOGIN / ROLE SETUP ---
+# with st.sidebar:
+#     st.header("🔐 Login")
+#     user_email = st.text_input("Email", placeholder="you@example.com")
+#     user_password = st.text_input("Password", type="password")
+
+# # Example user database (in real case, passwords should be hashed!)
+# USER_CREDENTIALS = {
+#     "shubham@example.com": {"password": "shubham123", "role": "Admin"},
+#     "tanya@example.com": {"password": "tanya456", "role": "Manager"},
+#     "intern@example.com": {"password": "intern789", "role": "Employee"},
+# }
+
+# # Check login
+# if user_email and user_password:
+#     user_info = USER_CREDENTIALS.get(user_email.lower())
+#     if user_info and user_info["password"] == user_password:
+#         role = user_info["role"]
+#         st.sidebar.success(f"Logged in as: {role}")
+#     else:
+#         st.sidebar.error("Invalid email or password")
+#         st.stop()
+# else:
+#     st.warning("Please enter your email and password to continue.")
+#     st.stop()
+# --- USER LOGIN / ROLE SETUP end end end end end  ---
+
+
 
 # --- UTILITY FUNCTIONS ---
 
@@ -46,7 +74,8 @@ def get_designation_effort_by_project(df_all, emp_designation_map, selected_proj
     df_proj = df_all[df_all["Project"] == selected_project].copy()
     df_proj["Designation"] = df_proj["Employee ID"].map(emp_designation_map).fillna("Unknown")
     designation_summary = df_proj.groupby("Designation")["Hours"].sum().reset_index()
-    designation_summary.rename(columns={"Hours": "Total Hours"}, inplace=True)
+    designation_summary.rename(columns={"Hours": "Total Days"}, inplace=True)
+    # designation_summary.rename(columns={"Hours": "Days"}, inplace=True)
     return designation_summary
 
 def get_designation_map():
@@ -224,6 +253,7 @@ def project_wise_employee_table(df, selected_project):
         .sort_values("Hours", ascending=False)
     )
     grouped = grouped[grouped["Hours"] > 0]
+    grouped.rename(columns={"Hours": "Days"}, inplace=True) 
     return grouped.set_index("Employee")
 
 
@@ -392,14 +422,16 @@ if month:
         # --- EMPLOYEE CHART ---
         # st.subheader("👥 Total Days Per Employee")
         emp_total = df_summary.groupby('Employee')['Hours'].sum().reset_index()
-        fig_emp = px.bar(emp_total, x='Hours', y='Employee', orientation='h', color='Employee')
+        emp_total.rename(columns={"Hours": "Days"}, inplace=True) 
+        fig_emp = px.bar(emp_total, x='Days', y='Employee', orientation='h', color='Employee')
         # save_chart_as_image(fig_emp, "project_chart_3.png")
         # st.plotly_chart(fig_emp, use_container_width=True)
 
         # --- PROJECT STACKED ---
         # st.subheader("📊 Project-wise Contribution by Employees")
         proj_emp_df = df_summary.groupby(['Project', 'Employee'])['Hours'].sum().reset_index()
-        fig = px.bar(proj_emp_df, x="Project", y="Hours", color="Employee", text="Hours", barmode="stack")
+        proj_emp_df.rename(columns={"Hours": "Days"}, inplace=True) 
+        fig = px.bar(proj_emp_df, x="Project", y="Days", color="Employee", text="Days", barmode="stack")
         # save_chart_as_image(proj_emp_df, "project_chart.png")
         # st.plotly_chart(fig, use_container_width=True)
 
@@ -409,7 +441,9 @@ if month:
         if curr_index == 0:
             st.info(f"This is the first month ({month}) in the data. No previous month available for comparison.")
             emp_df = df_summary.groupby("Employee")["Hours"].sum().reset_index()
+            emp_df.rename(columns={"Hours": "Days"}, inplace=True)
             proj_df = df_summary.groupby("Project")["Hours"].sum().reset_index()
+            proj_df.rename(columns={"Hours": "Days"}, inplace=True)
             # st.write("🔍 Sample Data Extracted:")
             # st.dataframe(df_summary.head(20))
 
