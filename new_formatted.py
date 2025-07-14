@@ -10,6 +10,7 @@ import plotly.io as pio
 import hashlib
 from dotenv import load_dotenv
 import re
+import os
 
 # --- CONFIGURATION ---
 SCOPES = [
