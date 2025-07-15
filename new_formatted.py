@@ -1046,7 +1046,7 @@ if month:
             
             if not df_all_time.empty:
                 all_projects = sorted(df_all_time["Project"].dropna().unique())
-                selected_proj = st.selectbox("Select Project", all_projects, key="designation_project")
+                #selected_proj = st.selectbox("Select Project", all_projects, key="designation_project")
 
                 if selected_proj:
                     desg_table = get_designation_effort_by_project(df_all_time, emp_designation_map, selected_proj)
