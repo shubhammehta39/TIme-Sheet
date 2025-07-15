@@ -1044,15 +1044,15 @@ if month:
             # st.markdown("### 🧑‍💼 Designation-wise Effort per Project")
             emp_designation_map = get_designation_map()
             
-            if not df_all_time.empty:
-                all_projects = sorted(df_all_time["Project"].dropna().unique())
-                #selected_proj = st.selectbox("Select Project", all_projects, key="designation_project")
+            # if not df_all_time.empty:
+            #     all_projects = sorted(df_all_time["Project"].dropna().unique())
+            #     #selected_proj = st.selectbox("Select Project", all_projects, key="designation_project")
 
-                if selected_proj:
-                    desg_table = get_designation_effort_by_project(df_all_time, emp_designation_map, selected_proj)
-                    # st.dataframe(desg_table.set_index("Designation"), use_container_width=True)
-            else:
-                st.info("No all-time project data found.")
+            #     if selected_proj:
+            #         desg_table = get_designation_effort_by_project(df_all_time, emp_designation_map, selected_proj)
+            #         # st.dataframe(desg_table.set_index("Designation"), use_container_width=True)
+            # else:
+            #     st.info("No all-time project data found.")
                 
         # --- COMMENTED OUT: Month-on-Month Project Resource Analysis ---        
         if not df_all_time.empty:
