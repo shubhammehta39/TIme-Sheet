@@ -1,5 +1,3 @@
-#https://claude.ai/chat/ccf79042-406a-4017-a602-f10e32341920
-
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -12,6 +10,7 @@ import plotly.io as pio
 import hashlib
 from dotenv import load_dotenv
 import re
+import os
 
 # --- CONFIGURATION ---
 SCOPES = [
@@ -20,17 +19,25 @@ SCOPES = [
 ]
 
 SHEET_URLS = {
-    "TDFS44": "https://docs.google.com/spreadsheets/d/1p3583-UC0odlroqFyfdYqKF5AlO2NbA7EY9_95yNloE",  # aditi
-    "TDFS46": "https://docs.google.com/spreadsheets/d/1fwj1MWZGqbcDATuUfoeuRhEJ7tmqKlQ9v29fRy1IeVA",  # chirag
-    "TDFS47": "https://docs.google.com/spreadsheets/d/1NKLyLNN1AEKlVaS1ejfAO6MmRrdqDt1qjhnuuGL5xAw"   # harsh
+    # "TF_003": "https://docs.google.com/spreadsheets/d/1qRiex4L1bpXu-4q1VwgxsiqB6f5KR0qZUmJrAXZI0II",
+    # "TF_004": "https://docs.google.com/spreadsheets/d/1xEXlpnvu8Xxy-Pr7VtIdWnLYBqDjO0CWgq6Y4UPl3wA",
+    # "TF_005": "https://docs.google.com/spreadsheets/d/14VLlqc3GRYjkovBd4xc4ypTQOiiXYvf9c3OCOqw9LNI",
+    "TDFS44": "https://docs.google.com/spreadsheets/d/1p3583-UC0odlroqFyfdYqKF5AlO2NbA7EY9_95yNloE",#aditi
+    "TDFS46": "https://docs.google.com/spreadsheets/d/1fwj1MWZGqbcDATuUfoeuRhEJ7tmqKlQ9v29fRy1IeVA",#chirag
+    "TDFS47": "https://docs.google.com/spreadsheets/d/1NKLyLNN1AEKlVaS1ejfAO6MmRrdqDt1qjhnuuGL5xAw" #harsh
+    
 }
 
 CREDENTIALS_PATH = "credentials.json"
-MASTER_SHEET_ID = "1keBMyJdHJIeHrCsM70_xJlq4lugoHJibTelqKP_S3hs"
+load_dotenv()  # loads .env file into environment variables
+MASTER_SHEET_ID = os.getenv("MASTER_ID")
+
 EMPLOYEE_SHEET_NAME = "Employee Detail"
 
 # --- AUTHENTICATION ---
-creds = service_account.Credentials.from_service_account_file(CREDENTIALS_PATH, scopes=SCOPES)
+#creds = service_account.Credentials.from_service_account_file(CREDENTIALS_PATH, scopes=SCOPES)
+service_account_info = st.secrets["gcp_service_account"]
+creds = service_account.Credentials.from_service_account_info(service_account_info, scopes=SCOPES)
 drive_service = build("drive", "v3", credentials=creds)
 sheets_service = build("sheets", "v4", credentials=creds)
 
@@ -482,7 +489,6 @@ def create_individual_dashboard(df_all_time, current_month, emp_designation_map)
         # Utilization calculation (22 working days per month)
         working_days_per_month = 22
         utilization = (total_man_days / working_days_per_month * 100) if working_days_per_month > 0 else 0
-        # row["Utilization (%)"] = f"=(Total Man Days/22) *100"
         row["Utilization (%)"] = f"{utilization:.1f}%"
         
         table_data.append(row)
@@ -657,8 +663,6 @@ if month:
         st.write("- No data entered for this month")
         st.write("- Connectivity issues with Google Sheets")
     else:
-        # st.success(f"✅ Found {len(df_summary)} records for {month}")
-        
         # Clean project names
         df_summary['Project'] = df_summary['Project'].astype(str).str.strip()
         df_summary = df_summary[~df_summary['Project'].str.match(r'^\d+$')]
@@ -708,6 +712,7 @@ if month:
                     st.info("No weekly data found for this project in selected month.")
         else:
             st.warning("No valid date data found for weekly breakdown")
+        
         df_all_time=analyze_all_months()  
         if not df_all_time.empty:
             st.subheader("📊 Month-on-Month Project Resource Analysis")
@@ -757,77 +762,12 @@ if month:
                     )
                     
                     st.dataframe(styled_table, use_container_width=True)
-                    
-                    # Add variance analysis - only if we have a Total row
-                    # total_rows = display_table[display_table["Resource"] == "Total"]
-                    # if not total_rows.empty:
-                    #     total_actual = total_rows["TOTAL Effort (Man Days)"].iloc[0]
-                    #     total_planned = total_rows["Planned Effort (Man Days)"].iloc[0]
-                    #     variance = total_actual - total_planned
-                    #     variance_pct = (variance / total_planned * 100) if total_planned > 0 else 0
-                        
-                    #     # Display variance metrics
-                    #     col1, col2, col3, col4 = st.columns(4)
-                        
-                    #     with col1:
-                    #         st.metric("Total Actual Effort", f"{total_actual:.1f} days")
-                        
-                    #     with col2:
-                    #         st.metric("Total Planned Effort", f"{total_planned:.1f} days")
-                        
-                    #     with col3:
-                    #         st.metric(
-                    #             "Variance", 
-                    #             f"{variance:+.1f} days",
-                    #             delta=f"{variance_pct:+.1f}%"
-                    #         )
-                        
-                    #     with col4:
-                    #         if total_planned == 0:
-                    #             status = "❓ No Plan"
-                    #         elif abs(variance_pct) <= 10:
-                    #             status = "✅ On Track"
-                    #         else:
-                    #             status = "⚠️ Off Track"
-                    #         st.metric("Status", status)
-                    
-                    # Show explanation of planned effort
-                    
-                        
-                        # if total_planned > 0:
-                        #     num_resources = len(mom_table) - 1  # Exclude total row
-                        #     planned_per_resource = total_planned / num_resources if num_resources > 0 else 0
-                        #     st.write(f"5. **Per Resource**: {total_planned:.1f} ÷ {num_resources} = {planned_per_resource:.1f} days per resource")
-                    
-                    # Resource utilization chart - exclude Total row and only show resources with data
-                    chart_data = display_table[
-                        (display_table["Resource"] != "Total") & 
-                        (display_table["TOTAL Effort (Man Days)"] > 0)
-                    ].copy()
-                    
-                    # if not chart_data.empty:
-                    #     fig_resource = px.bar(
-                    #         chart_data,
-                    #         x="Resource",
-                    #         y=["TOTAL Effort (Man Days)", "Planned Effort (Man Days)"],
-                    #         title=f"Actual vs Planned Effort: {selected_project_mom}",
-                    #         barmode="group"
-                    #     )
-                    #     fig_resource.update_layout(
-                    #         plot_bgcolor="#131313",
-                    #         paper_bgcolor="#0E1117",
-                    #         font=dict(color="white")
-                    #     )
-                    #     st.plotly_chart(fig_resource, use_container_width=True)
-                    # else:
-                    #     st.info("No resource data available for chart visualization.")
                         
                 else:
                     st.info(f"No data found for project: {selected_project_mom}")
         else:
             st.info("No all-time data available for month-on-month analysis.")
 
-        #######################################################################################################
         # --- INDIVIDUAL EMPLOYEE PROJECT BREAKDOWN ---
         st.subheader("👤 Individual Employee Project Breakdown")
         
@@ -918,22 +858,6 @@ if month:
                     total_utilization = employee_table.loc["Total", "Utilization (%)"]
                     
                     col1, col2, col3 = st.columns(3)
-                    # with col1:
-                    #     st.metric("Total Hours", f"{employee_table.loc['Total', 'TOTAL (Man Days)']:.1f}")
-                    # with col2:
-                    #     st.metric("Working Days in Month", f"{working_days_per_month}")
-                    # with col3:
-                    #     utilization_color = "normal"
-                    #     if total_utilization < 50:
-                    #         utilization_color = "inverse"
-                    #     elif total_utilization > 100:
-                    #         utilization_color = "off"
-                        
-                    #     st.metric(
-                    #         "Overall Utilization", 
-                    #         f"{total_utilization:.2f}%",
-                    #         delta=f"{total_utilization - 100:.2f}% vs 100% target"
-                    #     )
                     
                     # Utilization interpretation
                     if total_utilization < 50:
@@ -949,47 +873,6 @@ if month:
                     st.info(f"No data found for {selected_employee} in {month}")
         else:
             st.warning("No valid date data found for individual employee analysis")
-
-    #######################################################################################################
-
-        # --- WEEKLY BREAKDOWN SECTION (ONLY WEEKLY RESOURCE EFFORT TABLE) ---
-        # st.subheader("📅 Weekly Resource Effort Table")
-        
-        # if not df_with_week.empty:
-        #     # Project selection for weekly breakdown
-        #     unique_projects_weekly = sorted(df_with_week["Project"].unique())
-        #     selected_proj_week = st.selectbox("Select a project for weekly breakdown", unique_projects_weekly, key="weekly_project")
-
-        #     if selected_proj_week:
-        #         # Filter data for selected project
-        #         df_proj_week = df_with_week[df_with_week["Project"] == selected_proj_week].copy()
-                
-        #         if not df_proj_week.empty:
-        #             # 📋 Weekly resource table
-        #             st.subheader(f"📋 Weekly Resource Effort Table - {selected_proj_week}")
-        #             weekly_table = pd.pivot_table(
-        #                 df_proj_week,
-        #                 values="Hours",
-        #                 index="Employee Name",
-        #                 columns="Week",
-        #                 aggfunc="sum",
-        #                 fill_value=0
-        #             )
-                    
-        #             # Ensure all weeks are present
-        #             for week in ["Week 1", "Week 2", "Week 3", "Week 4"]:
-        #                 if week not in weekly_table.columns:
-        #                     weekly_table[week] = 0
-                    
-        #             weekly_table = weekly_table[["Week 1", "Week 2", "Week 3", "Week 4"]]
-        #             weekly_table["TOTAL (Man Days)"] = weekly_table.sum(axis=1)
-        #             weekly_table = weekly_table.sort_values("TOTAL (Man Days)", ascending=False)
-                    
-        #             st.dataframe(weekly_table.style.format("{:.1f}"), use_container_width=True)
-        #         else:
-        #             st.info("No weekly data found for this project in selected month.")
-        # else:
-        #     st.warning("No valid date data found for weekly breakdown")
 
         # --- NEW SECTION: OVERALL DASHBOARD ---
         st.header("📊 Overall Dashboard")
@@ -1058,269 +941,14 @@ if month:
                 
                 st.dataframe(individual_dashboard_table, use_container_width=True)
                 
-                # # Add explanation for utilization formula
-                # with st.expander("ℹ️ Utilization Formula Explanation"):
-                #     st.write("**Utilization (%) = (Total Man Days / 22) × 100**")
-                #     st.write("- **22** represents the standard working days in a month")
-                #     st.write("- **Total Man Days** is the sum of hours worked across all weeks")
-                #     st.write("- **100%** utilization means the employee worked all available working days")
             else:
                 st.info("No individual data available for current month")
 
-        # --- COMMENTED OUT SECTIONS ---
-        # # --- MULTI PROJECT SEARCH ---
-        # st.markdown("### 🔎 Filter Projects")
-        # all_proj = sorted(df_summary['Project'].unique())
-        # selected_projects = st.multiselect("Select project(s) to analyze", all_proj)
-
-        # if selected_projects:
-        #     proj_df = df_summary[df_summary['Project'].isin(selected_projects)]
-        #     proj_grouped = proj_df.groupby(['Project', 'Employee', 'Designation'], as_index=False)['Hours'].sum()
-
-        #     fig_proj = px.bar(proj_grouped, x='Hours', y='Project', color='Employee', text='Hours', barmode='group')
-        #     fig_proj.update_traces(texttemplate='%{text:.1f}', textposition='outside')
-        #     unique_projects = proj_grouped['Project'].nunique()
-        #     fig_proj.update_layout(
-        #         height=max(500, unique_projects * 80),
-        #         plot_bgcolor="#131313",
-        #         paper_bgcolor="#0E1117",
-        #         font=dict(color="white")
-        #     )
-        #     st.plotly_chart(fig_proj, use_container_width=True)
-
-        # # --- SUMMARY TABLE ---
-        # proj_total = df_summary.groupby('Project')['Hours'].sum().reset_index()
-        # proj_total = proj_total[proj_total['Project'] != '']
-        # proj_total.rename(columns={'Hours': 'Total Days'}, inplace=True)
-
-        # # Project summary chart
-        # fig = px.bar(
-        #     proj_total,
-        #     x='Total Days',
-        #     y='Project',
-        #     color='Project',
-        #     orientation='h',
-        #     height=500,
-        #     title='Total Days Spent Per Project'
-        # )
-        # fig.update_layout(
-        #     showlegend=True,
-        #     legend_title_text="Project",
-        #     plot_bgcolor="#131313",
-        #     paper_bgcolor="#0E1117",
-        #     bargap=0.3,
-        #     font=dict(color="white"),
-        #     legend=dict(
-        #         orientation="v",
-        #         yanchor="middle",
-        #         y=0.5,
-        #         xanchor="left",
-        #         x=1.02,
-        #         borderwidth=0,
-        #         bgcolor="rgba(0,0,0,0)",
-        #     )
-        # )
-        # st.plotly_chart(fig, use_container_width=True)
-
-        # # Summary pivot table
-        # pivot = total_summary_table(df_summary)
-        # display_large_table(pivot, f"📊 Employee Project Summary for {month}")
-
-        # # --- MONTH ON MONTH COMPARISON ---
-        # st.subheader(f"📈 Month-on-Month Comparison for {month}")
-        # curr_index = all_months.index(month)
-        
-        # if curr_index == 0:
-        #     st.info(f"This is the first month ({month}) in the data. No previous month available for comparison.")
-        #     emp_df = df_summary.groupby("Employee")["Hours"].sum().reset_index()
-        #     emp_df.rename(columns={"Hours": "Days"}, inplace=True)
-        #     proj_df = df_summary.groupby("Project")["Hours"].sum().reset_index()
-        #     proj_df.rename(columns={"Hours": "Days"}, inplace=True)
-            
-        #     display_large_table(emp_df.set_index("Employee"), f"Employee Summary for {month}")
-        #     display_large_table(proj_df.set_index("Project"), f"Project Summary for {month}")
-        # else:
-        #     prev_month = all_months[curr_index - 1]
-        #     df_prev = analyze_sheets(prev_month)
-            
-        #     if not df_prev.empty:
-        #         compare_emp_df = compare_months(df_summary, df_prev, current_month=month, previous_month=prev_month)
-        #         compare_proj_df = compare_projects(df_summary, df_prev, current_month=month, previous_month=prev_month)
-                
-        #         display_large_table(compare_emp_df, f"📈 Month-on-Month by Employee ({prev_month} vs {month})")
-        #         display_large_table(compare_proj_df, f"📈 Month-on-Month by Project ({prev_month} vs {month})")
-
         # --- ALL TIME ANALYSIS (ONLY DESIGNATION-WISE EFFORT) ---
-        # st.subheader("🕓 Total Effort Across All Months")
         if df_all_time.empty:
             st.info("No data found across months.")
         else:
             df_all_time['Project'] = df_all_time['Project'].astype(str).str.strip()
             
-            # # --- COMMENTED OUT: Chart and variance table ---
-            # proj_overall = df_all_time.groupby('Project')['Hours'].sum().reset_index()
-            # proj_overall = proj_overall[proj_overall['Project'].str.len() > 2]
-            # proj_overall.rename(columns={'Hours': 'Actual Days Spent'}, inplace=True)
-
-            # # Add expected effort
-            # expected_map = get_expected_effort_map()
-            # proj_overall['Expected Days'] = proj_overall['Project'].map(expected_map).fillna(0)
-            # proj_overall['Variance'] = proj_overall['Actual Days Spent'] - proj_overall['Expected Days']
-            # proj_overall = proj_overall.sort_values(by='Actual Days Spent', ascending=False)
-
-            # # Chart
-            # fig_all = px.bar(
-            #     proj_overall,
-            #     x="Actual Days Spent",
-            #     y="Project",
-            #     orientation="h",
-            #     color="Project",
-            #     title="Total Days Spent per Project (All Months)"
-            # )
-            # fig_all.update_layout(
-            #     plot_bgcolor="#131313",
-            #     paper_bgcolor="#0E1117",
-            #     font=dict(color="white"),
-            #     showlegend=False
-            # )
-            # st.plotly_chart(fig_all, use_container_width=True)
-            
-            # # Display table with variance
-            # st.dataframe(
-            #     proj_overall.style
-            #     .format({"Expected Days": "{:.1f}", "Actual Days Spent": "{:.1f}", "Variance": "{:+.1f}"})
-            #     .background_gradient(subset=["Variance"], cmap="RdYlGn_r")
-            # )
-
             # --- DESIGNATION WISE EFFORT (KEPT) ---
-            # st.markdown("### 🧑‍💼 Designation-wise Effort per Project")
             emp_designation_map = get_designation_map()
-            
-            # if not df_all_time.empty:
-            #     all_projects = sorted(df_all_time["Project"].dropna().unique())
-            #     selected_proj = st.selectbox("Select Project", all_projects, key="designation_project")
-
-            #     if selected_proj:
-            #         desg_table = get_designation_effort_by_project(df_all_time, emp_designation_map, selected_proj)
-            #         # st.dataframe(desg_table.set_index("Designation"), use_container_width=True)
-            # else:
-            #     st.info("No all-time project data found.")
-                
-        # --- COMMENTED OUT: Month-on-Month Project Resource Analysis ---        
-        # if not df_all_time.empty:
-        #     st.subheader("📊 Month-on-Month Project Resource Analysis")
-            
-        #     # Project selection for month-on-month analysis
-        #     all_projects_mom = sorted(df_all_time["Project"].dropna().unique())
-        #     selected_project_mom = st.selectbox(
-        #         "Select Project for Month-on-Month Analysis", 
-        #         all_projects_mom, 
-        #         key="mom_project_selection"
-        #     )
-            
-        #     if selected_project_mom:
-        #         # FIXED: Create the month-on-month table with correct logic
-        #         mom_table, month_labels = create_month_on_month_project_table(
-        #             df_all_time, 
-        #             selected_project_mom,
-        #             month,  # Current selected month
-        #             all_months  # All available months in chronological order
-        #         )
-                
-        #         if not mom_table.empty:
-        #             st.markdown(f"#### 📈 Month-on-Month Analysis: {selected_project_mom}")
-                    
-        #             # Display month information
-        #             st.markdown(f"**Months:** M1 ({month_labels[0]}) → M2 ({month_labels[1]}) → M3 ({month_labels[2]})")
-                    
-        #             # Rename columns to show actual month names in the table
-        #             display_table = mom_table.copy()
-        #             for i, month_label in enumerate(month_labels):
-        #                 old_col = f"M{i+1}"
-        #                 if "Ago" in month_label or month_label in ["Current"]:
-        #                     new_col = f"M{i+1} ({month_label})"
-        #                 else:
-        #                     new_col = f"M{i+1} ({month_label})"
-                        
-        #                 if old_col in display_table.columns:
-        #                     display_table = display_table.rename(columns={old_col: new_col})
-                    
-        #             # Display the table with formatting
-        #             styled_table = display_table.style.format({
-        #                 col: "{:.1f}" for col in display_table.columns 
-        #                 if col not in ["Resource"] and col in display_table.select_dtypes(include=[int, float]).columns
-        #             }).background_gradient(
-        #                 subset=["TOTAL Effort (Man Days)", "Planned Effort (Man Days)"], 
-        #                 cmap="RdYlGn"
-        #             )
-                    
-        #             st.dataframe(styled_table, use_container_width=True)
-                    
-        #             # Add variance analysis - only if we have a Total row
-        #             # total_rows = display_table[display_table["Resource"] == "Total"]
-        #             # if not total_rows.empty:
-        #             #     total_actual = total_rows["TOTAL Effort (Man Days)"].iloc[0]
-        #             #     total_planned = total_rows["Planned Effort (Man Days)"].iloc[0]
-        #             #     variance = total_actual - total_planned
-        #             #     variance_pct = (variance / total_planned * 100) if total_planned > 0 else 0
-                        
-        #             #     # Display variance metrics
-        #             #     col1, col2, col3, col4 = st.columns(4)
-                        
-        #             #     with col1:
-        #             #         st.metric("Total Actual Effort", f"{total_actual:.1f} days")
-                        
-        #             #     with col2:
-        #             #         st.metric("Total Planned Effort", f"{total_planned:.1f} days")
-                        
-        #             #     with col3:
-        #             #         st.metric(
-        #             #             "Variance", 
-        #             #             f"{variance:+.1f} days",
-        #             #             delta=f"{variance_pct:+.1f}%"
-        #             #         )
-                        
-        #             #     with col4:
-        #             #         if total_planned == 0:
-        #             #             status = "❓ No Plan"
-        #             #         elif abs(variance_pct) <= 10:
-        #             #             status = "✅ On Track"
-        #             #         else:
-        #             #             status = "⚠️ Off Track"
-        #             #         st.metric("Status", status)
-                    
-        #             # Show explanation of planned effort
-                    
-                        
-        #                 # if total_planned > 0:
-        #                 #     num_resources = len(mom_table) - 1  # Exclude total row
-        #                 #     planned_per_resource = total_planned / num_resources if num_resources > 0 else 0
-        #                 #     st.write(f"5. **Per Resource**: {total_planned:.1f} ÷ {num_resources} = {planned_per_resource:.1f} days per resource")
-                    
-        #             # Resource utilization chart - exclude Total row and only show resources with data
-        #             chart_data = display_table[
-        #                 (display_table["Resource"] != "Total") & 
-        #                 (display_table["TOTAL Effort (Man Days)"] > 0)
-        #             ].copy()
-                    
-        #             # if not chart_data.empty:
-        #             #     fig_resource = px.bar(
-        #             #         chart_data,
-        #             #         x="Resource",
-        #             #         y=["TOTAL Effort (Man Days)", "Planned Effort (Man Days)"],
-        #             #         title=f"Actual vs Planned Effort: {selected_project_mom}",
-        #             #         barmode="group"
-        #             #     )
-        #             #     fig_resource.update_layout(
-        #             #         plot_bgcolor="#131313",
-        #             #         paper_bgcolor="#0E1117",
-        #             #         font=dict(color="white")
-        #             #     )
-        #             #     st.plotly_chart(fig_resource, use_container_width=True)
-        #             # else:
-        #             #     st.info("No resource data available for chart visualization.")
-                        
-        #         else:
-        #             st.info(f"No data found for project: {selected_project_mom}")
-        # else:
-        #     st.info("No all-time data available for month-on-month analysis.")
