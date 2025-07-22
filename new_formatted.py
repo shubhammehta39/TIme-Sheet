@@ -556,14 +556,14 @@ if month:
 
         df_with_week = add_week_column(df_summary)
 
-        st.subheader("📅 Weekly Resource Effort Table")
+        st.subheader("📅 Project Wise Resource Analysis")
         if not df_with_week.empty:
             unique_projects_weekly = sorted(df_with_week["Project"].unique())
             selected_proj_week = st.selectbox("Select a project for weekly breakdown", unique_projects_weekly, key="weekly_project")
             if selected_proj_week:
                 df_proj_week = df_with_week[df_with_week["Project"] == selected_proj_week].copy()
                 if not df_proj_week.empty:
-                    st.subheader(f"📋 Weekly Resource Effort Table - {selected_proj_week}")
+                    st.subheader(f"📋 Weekly Project Effort - {selected_proj_week}")
                     weekly_table = pd.pivot_table(
                         df_proj_week, values="Hours", index="Employee Name",
                         columns="Week", aggfunc="sum", fill_value=0
@@ -581,7 +581,7 @@ if month:
             st.warning("No valid date data found for weekly breakdown")
 
         if not df_all_time.empty:
-            st.subheader("📊 Month-on-Month Project Resource Analysis")
+            st.subheader("📊 ⁠Month-on-Month Project Effort")
             all_projects_mom = sorted(df_all_time["Project"].dropna().unique())
             selected_project_mom = st.selectbox(
                 "Select Project for Month-on-Month Analysis",
