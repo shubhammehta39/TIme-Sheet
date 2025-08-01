@@ -13,10 +13,6 @@ import re
 import os
 
 
-
-============
-
-
 # --- CONFIGURATION ---
 SCOPES = [
     "https://www.googleapis.com/auth/spreadsheets",
