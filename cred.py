@@ -127,6 +127,7 @@ def get_sheet_names_cached(file_id: str):
 @st.cache_data(ttl=3600)
 def load_sheet_data_cached(file_id: str, sheet_name: str):
     try:
+        time.sleep(1.0)
         result = sheets_service.spreadsheets().values().get(
             spreadsheetId=file_id,
             range=sheet_name
