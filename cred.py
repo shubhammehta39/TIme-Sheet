@@ -79,17 +79,17 @@ EMPLOYEE_SHEET_NAME = "Employee Detail"
 # sheets_service = build("sheets", "v4", credentials=creds)
 
 
-# @st.cache_resource
-# def get_google_services():
-#     creds = service_account.Credentials.from_service_account_info(
-#         st.secrets["gcp_service_account"],  # <-- from secrets, not file
-#         scopes=SCOPES
-#     )
-#     drive_service = build("drive", "v3", credentials=creds)
-#     sheets_service = build("sheets", "v4", credentials=creds)
-#     return drive_service, sheets_service
+@st.cache_resource
+def get_google_services():
+    creds = service_account.Credentials.from_service_account_info(
+        st.secrets["gcp_service_account"],  # <-- from secrets, not file
+        scopes=SCOPES
+    )
+    drive_service = build("drive", "v3", credentials=creds)
+    sheets_service = build("sheets", "v4", credentials=creds)
+    return drive_service, sheets_service
 
-# drive_service, sheets_service = get_google_services()
+drive_service, sheets_service = get_google_services()
 
 # st.set_page_config(page_title="TDf Project Tracker Dashboard", layout="wide")
 # st.title("TDF Project Work Tracker")
@@ -762,23 +762,23 @@ EMPLOYEE_SHEET_NAME = "Employee Detail"
 
 
 # START====================================      START      ==================================     START    ==========================================
-@st.cache_resource
-def get_google_services():
-    creds = service_account.Credentials.from_service_account_file(CREDENTIALS_PATH, scopes=SCOPES)
-    drive_service = build("drive", "v3", credentials=creds)
-    sheets_service = build("sheets", "v4", credentials=creds)
-    return drive_service, sheets_service
+# @st.cache_resource
+# def get_google_services():
+#     creds = service_account.Credentials.from_service_account_file(CREDENTIALS_PATH, scopes=SCOPES)
+#     drive_service = build("drive", "v3", credentials=creds)
+#     sheets_service = build("sheets", "v4", credentials=creds)
+#     return drive_service, sheets_service
 
-drive_service, sheets_service = get_google_services()
-@st.cache_resource
-def get_google_services():
-    service_account_info = st.secrets["gcp_service_account"]
-    creds = service_account.Credentials.from_service_account_info(service_account_info, scopes=SCOPES)
-    drive_service = build("drive", "v3", credentials=creds)
-    sheets_service = build("sheets", "v4", credentials=creds)
-    return drive_service, sheets_service
+# drive_service, sheets_service = get_google_services()
+# @st.cache_resource
+# def get_google_services():
+#     service_account_info = st.secrets["gcp_service_account"]
+#     creds = service_account.Credentials.from_service_account_info(service_account_info, scopes=SCOPES)
+#     drive_service = build("drive", "v3", credentials=creds)
+#     sheets_service = build("sheets", "v4", credentials=creds)
+#     return drive_service, sheets_service
 
-drive_service, sheets_service = get_google_services()
+# drive_service, sheets_service = get_google_services()
 
 
 st.set_page_config(page_title="TDf Project Tracker Dashboard", layout="wide")
