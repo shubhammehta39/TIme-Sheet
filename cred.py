@@ -282,10 +282,14 @@ def assign_week(date_str):
         if not date_str or pd.isna(date_str) or str(date_str).strip() == "":
             return "Unknown"
         date_str = str(date_str).strip()
+        # formats = [
+        #     "%m/%d/%Y", "%d/%m/%Y", "%Y-%m-%d", "%d-%m-%Y",
+        #     "%m-%d-%Y", "%m/%d/%y", "%d/%m/%y",
+        # ]
         formats = [
-            "%m/%d/%Y", "%d/%m/%Y", "%Y-%m-%d", "%d-%m-%Y",
-            "%m-%d-%Y", "%m/%d/%y", "%d/%m/%y",
-        ]
+                "%m/%d/%Y", "%m-%d-%Y", "%d/%m/%Y", "%Y-%m-%d", "%d-%m-%Y",
+                "%m/%d/%y", "%d/%m/%y",
+            ]
         for fmt in formats:
             try:
                 dt = datetime.strptime(date_str, fmt)
@@ -832,7 +836,11 @@ if month:
                 def assign_week_simple(date_str):
                     try:
                         date_str = str(date_str).strip()
-                        formats = ["%m/%d/%Y", "%d/%m/%Y", "%Y-%m-%d", "%d-%m-%Y", "%m-%d-%Y"]
+                       # formats = ["%m/%d/%Y", "%d/%m/%Y", "%Y-%m-%d", "%d-%m-%Y", "%m-%d-%Y"]
+                        formats = [
+                                "%m/%d/%Y", "%m-%d-%Y", "%d/%m/%Y", "%Y-%m-%d", "%d-%m-%Y",
+                                "%m/%d/%y", "%d/%m/%y",
+                            ]
                         for fmt in formats:
                             try:
                                 dt = datetime.strptime(date_str, fmt)
