@@ -211,9 +211,10 @@ def parse_sheet_data_with_split_dates(file_id, sheet_name):
             continue
         for date_col in date_cols:
             date_value = row[date_col]
+            
             if pd.isna(date_value) or str(date_value).strip() in ["", "-", "0"]:
                 continue
-            individual_dates = extract_individual_dates(str(date_col))
+            individual_dates = extract_individual_dates(str(date_value))  ##changes made here col-> value date_col->date_value
             if individual_dates:
                 try:
                     total_value = float(str(date_value).strip())
