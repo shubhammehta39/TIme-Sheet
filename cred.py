@@ -93,12 +93,191 @@ drive_service, sheets_service = get_google_services()
 
 
 
+# ============================================
+# PAGE CONFIGURATION
+# ============================================
 
-st.set_page_config(page_title="TDf Project Tracker Dashboard", layout="wide")
-st.title("TDF Project Work Tracker")
+st.set_page_config(
+    page_title="TDF Project Tracker",
+    page_icon="📊",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
+# ============================================
+# PROFESSIONAL STYLING
+# ============================================
 
-# --- CACHED UTILITY FUNCTIONS ---
+st.markdown("""
+    <style>
+    /* Import Google Fonts */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    
+    /* Global Styles */
+    * {
+        font-family: 'Inter', sans-serif;
+    }
+    
+    .main {
+        background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+    }
+    
+    /* Header Styling */
+    .main-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 2rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    }
+    
+    .main-header h1 {
+        color: white;
+        margin: 0;
+        font-weight: 700;
+        font-size: 2.5rem;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .main-header p {
+        color: rgba(255,255,255,0.9);
+        margin: 0.5rem 0 0 0;
+        font-size: 1.1rem;
+    }
+    
+    /* Card Styling */
+    .metric-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        border-left: 4px solid #667eea;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .metric-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+    }
+    
+    /* Data Tables */
+    .stDataFrame {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    }
+    
+    /* Sidebar */
+    [data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+    }
+    
+    [data-testid="stSidebar"] * {
+        color: white !important;
+    }
+    
+    [data-testid="stSidebar"] .stSelectbox label {
+        font-weight: 600;
+        font-size: 0.95rem;
+    }
+    
+    /* Tabs */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 10px;
+        background: transparent;
+    }
+    
+    .stTabs [data-baseweb="tab"] {
+        background: white;
+        border-radius: 8px;
+        padding: 12px 24px;
+        font-weight: 500;
+        border: 2px solid #e2e8f0;
+        transition: all 0.3s;
+    }
+    
+    .stTabs [aria-selected="true"] {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white !important;
+        border: 2px solid #667eea;
+    }
+    
+    /* Buttons */
+    .stButton > button {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 0.6rem 1.5rem;
+        font-weight: 600;
+        transition: all 0.3s;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+    
+    .stButton > button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+    
+    /* Metrics */
+    [data-testid="stMetricValue"] {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #667eea;
+    }
+    
+    /* Status Badges */
+    .status-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+    
+    .status-green {
+        background: #d1fae5;
+        color: #065f46;
+    }
+    
+    .status-yellow {
+        background: #fef3c7;
+        color: #92400e;
+    }
+    
+    .status-red {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+    
+    /* Remove padding */
+    .block-container {
+        padding-top: 2rem;
+        padding-bottom: 2rem;
+    }
+    
+    /* Section Headers */
+    h2 {
+        color: #1e293b;
+        font-weight: 700;
+        margin-top: 2rem;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 3px solid #667eea;
+    }
+    
+    h3 {
+        color: #475569;
+        font-weight: 600;
+        margin-top: 1.5rem;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+# ============================================
+# UTILITY FUNCTIONS
+# ============================================
 
 @st.cache_data(ttl=3600)
 def extract_file_id(url):
@@ -115,7 +294,6 @@ def get_sheet_names_cached(file_id: str):
         metadata = sheets_service.spreadsheets().get(spreadsheetId=file_id).execute()
         return [sheet["properties"]["title"] for sheet in metadata.get("sheets", [])]
     except Exception as e:
-        print(f"Error fetching sheet names for {file_id}: {e}")
         return []
 
 @st.cache_data(ttl=3600)
@@ -136,9 +314,7 @@ def load_sheet_data_cached(file_id: str, sheet_name: str):
         df.dropna(how="all", inplace=True)
         return df
     except Exception as e:
-        print(f"Error loading sheet data {sheet_name} from {file_id}: {e}")
         return pd.DataFrame()
-    
 
 @st.cache_data(ttl=3600)
 def get_employee_map_cached():
@@ -153,7 +329,6 @@ def get_employee_map_cached():
 @st.cache_data(ttl=3600)
 def get_expected_effort_map_cached():
     try:
-        # Load raw data from Project Master sheet
         result = sheets_service.spreadsheets().values().get(
             spreadsheetId=MASTER_SHEET_ID,
             range="Project Master"
@@ -163,11 +338,9 @@ def get_expected_effort_map_cached():
         if len(values) < 2:
             return {}
         
-        # Row 0 is tracker link, Row 1 is headers, Row 2+ is data
         headers = values[1]
         data_rows = values[2:]
         
-        # Create DataFrame
         df_effort = pd.DataFrame(data_rows, columns=headers)
         
         if df_effort.empty or not {"ProjectList", "Project Effort Plan"}.issubset(df_effort.columns):
@@ -180,10 +353,7 @@ def get_expected_effort_map_cached():
             pd.to_numeric(df_effort["Project Effort Plan"], errors="coerce").fillna(0)
         ))
     except Exception as e:
-        print(f"Error loading effort map: {e}")
         return {}
-
-# --- DATA PROCESSING (no API calls here) ---
 
 def extract_individual_dates(date_string):
     if not date_string or pd.isna(date_string):
@@ -201,24 +371,9 @@ def extract_individual_dates(date_string):
         if found_dates:
             dates.extend(found_dates)
             break
-    if not dates:
-        separators = ['/', '-', '_', ' ', ',']
-        for sep in separators:
-            if sep in date_string:
-                potential_dates = date_string.split(sep)
-                for i in range(0, len(potential_dates) - 2, 3):
-                    if i + 2 < len(potential_dates):
-                        try:
-                            month, day, year = potential_dates[i:i + 3]
-                            if len(year) == 4 and year.isdigit():
-                                dates.append(f"{month}/{day}/{year}")
-                        except:
-                            continue
-                break
     return dates
 
 def parse_sheet_data_with_split_dates(file_id, sheet_name):
-    """Parse sheet data and split date columns if needed."""
     df = load_sheet_data_cached(file_id, sheet_name)
     if df.empty:
         return df
@@ -237,13 +392,8 @@ def parse_sheet_data_with_split_dates(file_id, sheet_name):
                 date_value = date_value.iloc[0]
             if pd.isna(date_value) or str(date_value).strip() in ["", "-", "0"]:
                 continue
-
-# individual_dates = extract_individual_dates(str(date_value))
-
             
-#             if pd.isna(date_value) or str(date_value).strip() in ["", "-", "0"]:
-#                 continue
-            individual_dates = extract_individual_dates(str(date_value))  ##changes made here col-> value date_col->date_value
+            individual_dates = extract_individual_dates(str(date_value))
             
             if individual_dates:
                 try:
@@ -267,51 +417,21 @@ def parse_sheet_data_with_split_dates(file_id, sheet_name):
                     })
                 except (ValueError, TypeError):
                     continue
+    
     if expanded_data:
         return pd.DataFrame(expanded_data)
     else:
         return pd.DataFrame()
-
-# def assign_week(date_str):
-#     try:
-#         if not date_str or pd.isna(date_str) or str(date_str).strip() == "":
-#             return "Unknown"
-#         date_str = str(date_str).strip()
-#         formats = [
-#             "%m/%d/%Y", "%d/%m/%Y", "%Y-%m-%d", "%d-%m-%Y",
-#             "%m-%d-%Y", "%m/%d/%y", "%d/%m/%y",
-#         ]
-#         for fmt in formats:
-#             try:
-#                 dt = datetime.strptime(date_str, fmt)
-#                 day = dt.day
-#                 if day <= 7:
-#                     return "Week 1"
-#                 elif day <= 14:
-#                     return "Week 2"
-#                 elif day <= 21:
-#                     return "Week 3"
-#                 else:
-#                     return "Week 4"
-#             except ValueError:
-#                 continue
-#         return "Unknown"
-#     except Exception:
-#         return "Unknown"
 
 def assign_week(date_str):
     try:
         if not date_str or pd.isna(date_str) or str(date_str).strip() == "":
             return "Unknown"
         date_str = str(date_str).strip()
-        # formats = [
-        #     "%m/%d/%Y", "%d/%m/%Y", "%Y-%m-%d", "%d-%m-%Y",
-        #     "%m-%d-%Y", "%m/%d/%y", "%d/%m/%y",
-        # ]
         formats = [
-                "%m/%d/%Y", "%m-%d-%Y", "%d/%m/%Y", "%Y-%m-%d", "%d-%m-%Y",
-                "%m/%d/%y", "%d/%m/%y",
-            ]
+            "%m/%d/%Y", "%m-%d-%Y", "%d/%m/%Y", "%Y-%m-%d", "%d-%m-%Y",
+            "%m/%d/%y", "%d/%m/%y",
+        ]
         for fmt in formats:
             try:
                 dt = datetime.strptime(date_str, fmt)
@@ -338,8 +458,6 @@ def add_week_column(df):
         df["Week"] = df["Date"].apply(assign_week)
         return df[df["Week"] != "Unknown"]
     return df
-
-# --- DATA ANALYSIS FUNCTIONS (use cached loads) ---
 
 def analyze_sheets(selected_month, all_months, sheet_urls, emp_map, designation_map):
     employee_data = []
@@ -416,39 +534,39 @@ def sort_months_chronologically(months):
     month_dates.sort(key=lambda x: x[0])
     return [month for _, month in month_dates]
 
-# --- NEW DAILY/WEEKLY TABLE UTILITY FUNCTIONS ---
-def get_weeks_for_month(df):
-    if df.empty or "Date" not in df.columns:
-        return []
-    # Parse all dates as pd.Timestamp
-    dates = pd.to_datetime(df["Date"], errors='coerce').dropna().sort_values().unique()
-    if len(dates) == 0:
-        return []
-    # Explicitly convert to pd.Timestamp for safe timedelta operations
-    min_date = pd.Timestamp(dates[0])
-    max_date = pd.Timestamp(dates[-1])
-    weeks = []
-    curr = min_date
-    while curr <= max_date:
-        week_end = curr + timedelta(days=6)
-        weeks.append( (curr, week_end) )
-        curr = week_end + timedelta(days=1)
-    return weeks
+def get_utilization_status(utilization):
+    if utilization < 50:
+        return "🔴 Under-utilized", "#ff9800"
+    elif utilization < 80:
+        return "🟡 Below Target", "#ffc107"
+    elif utilization <= 100:
+        return "🟢 Optimal", "#4caf50"
+    else:
+        return "🔴 Over-utilized", "#f44336"
 
-def filter_df_by_week(df, week_start, week_end):
-    df = df.copy()
-    df["Date_parsed"] = pd.to_datetime(df["Date"], errors='coerce')
-    mask = (df["Date_parsed"] >= week_start) & (df["Date_parsed"] <= week_end)
-    return df[mask].copy()
+def export_to_excel(dataframe, filename):
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        dataframe.to_excel(writer, index=True, sheet_name='Data')
+    output.seek(0)
+    return output
 
+# ============================================
+# MAIN APP
+# ============================================
 
+# Header
+st.markdown("""
+    <div class="main-header">
+        <h1>📊 TDF Project Work Tracker</h1>
+        <p>Professional Resource & Project Management Dashboard</p>
+    </div>
+""", unsafe_allow_html=True)
 
-# -- MAIN APP LOGIC --
-
-# Load employee map and designation once
+# Load employee maps
 emp_name_map, emp_designation_map = get_employee_map_cached()
 
-# Get all months from all employees, cached
+# Get all months
 all_months_raw = []
 for emp_id, url in SHEET_URLS.items():
     file_id = extract_file_id(url)
@@ -456,67 +574,214 @@ for emp_id, url in SHEET_URLS.items():
         continue
     months = get_sheet_names_cached(file_id)
     all_months_raw.extend(months)
-    # no time.sleep needed due to caching
 
 all_months = sort_months_chronologically(list(set(all_months_raw)))
 
-# Month selection from UI
-month = st.selectbox("Select Month", all_months)
+# ============================================
+# SIDEBAR
+# ============================================
 
-if month:
-    # Analyze data for only selected month to reduce API calls
-    df_all_time = analyze_all_months([month], SHEET_URLS, emp_name_map, emp_designation_map)
+with st.sidebar:
+    st.markdown("### 🎯 Filters & Controls")
+    
+    month = st.selectbox(
+        "📅 Select Month",
+        all_months,
+        help="Choose the month to analyze"
+    )
+    
+    st.markdown("---")
+    
+    if st.button("🔄 Refresh Data", use_container_width=True):
+        st.cache_data.clear()
+        st.success("✅ Data refreshed!")
+        st.rerun()
+    
+    st.markdown("---")
+    
+    if month:
+        with st.spinner("Loading metrics..."):
+            df_summary_temp = analyze_sheets(month, all_months, SHEET_URLS, emp_name_map, emp_designation_map)
+            
+            if not df_summary_temp.empty:
+                st.markdown("### 📊 Quick Stats")
+                
+                total_projects = df_summary_temp['Project'].nunique()
+                total_resources = df_summary_temp['Employee Name'].nunique()
+                total_hours = df_summary_temp['Hours'].sum()
+                avg_util = (total_hours / (total_resources * 22) * 100) if total_resources > 0 else 0
+                
+                st.metric("Projects", total_projects)
+                st.metric("Resources", total_resources)
+                st.metric("Total Hours", f"{total_hours:.1f}")
+                st.metric("Avg Utilization", f"{avg_util:.1f}%")
+    
+    st.markdown("---")
+    st.caption(f"🕐 Last updated: {datetime.now().strftime('%H:%M')}")
+
+# ============================================
+# MAIN CONTENT
+# ============================================
+
+if not month:
+    st.info("👈 Please select a month from the sidebar to begin analysis.")
+    st.stop()
+
+# Load data with spinner
+with st.spinner("🔄 Loading data... Please wait."):
+    df_all_time = analyze_sheets(month, all_months, SHEET_URLS, emp_name_map, emp_designation_map)
     df_summary = df_all_time[df_all_time['Month'] == month]
 
-    if df_summary.empty:
-        st.warning("No data found for this month")
-    else:
-        df_summary['Project'] = df_summary['Project'].astype(str).str.strip()
-        df_summary = df_summary[~df_summary['Project'].str.match(r'^\d+$')]
-        df_summary = df_summary[df_summary['Project'].str.len() > 2]
+if df_summary.empty:
+    st.warning(f"⚠️ No data found for {month}")
+    st.stop()
 
-        if "Employee" not in df_summary.columns:
-            df_summary['Employee'] = (df_summary['Employee Name'] + " (" +
-                                     df_summary['Designation'] + ", " + df_summary['Employee ID'] + ")")
+# Clean data
+df_summary['Project'] = df_summary['Project'].astype(str).str.strip()
+df_summary = df_summary[~df_summary['Project'].str.match(r'^\d+$')]
+df_summary = df_summary[df_summary['Project'].str.len() > 2]
 
-        df_with_week = add_week_column(df_summary)  #added lines below
-        # st.write("DEBUG: Week distribution")
-        # st.write(df_with_week["Week"].value_counts())
-        # st.write("DEBUG: Sample dates and their weeks")
-        # st.write(df_with_week[["Date", "Week"]].head(20))
+if "Employee" not in df_summary.columns:
+    df_summary['Employee'] = (df_summary['Employee Name'] + " (" +
+                             df_summary['Designation'] + ", " + df_summary['Employee ID'] + ")")
 
-        st.subheader("📅 Weekly Resource Effort Table")
-        if not df_with_week.empty:
-            unique_projects_weekly = sorted(df_with_week["Project"].unique())
-            selected_proj_week = st.selectbox("Select a project for weekly breakdown", unique_projects_weekly, key="weekly_project")
-            if selected_proj_week:
-                df_proj_week = df_with_week[df_with_week["Project"] == selected_proj_week].copy()
-                if not df_proj_week.empty:
-                    st.subheader(f"📋 Weekly Resource Effort Table - {selected_proj_week}")
-                    weekly_table = pd.pivot_table(
-                        df_proj_week, values="Hours", index="Employee Name",
-                        columns="Week", aggfunc="sum", fill_value=0
-                    )
-                    for week in ["Week 1", "Week 2", "Week 3", "Week 4"]:
-                        if week not in weekly_table.columns:
-                            weekly_table[week] = 0
-                    weekly_table = weekly_table[["Week 1", "Week 2", "Week 3", "Week 4"]]
-                    weekly_table["TOTAL (Man Days)"] = weekly_table.sum(axis=1)
-                    weekly_table = weekly_table.sort_values("TOTAL (Man Days)", ascending=False)
-                    st.dataframe(weekly_table.style.format("{:.1f}"), use_container_width=True)
-                else:
-                    st.info("No weekly data found for this project in selected month.")
-        else:
-            st.warning("No valid date data found for weekly breakdown")
+df_with_week = add_week_column(df_summary)
 
-        st.subheader("👤 Individual Employee Project Breakdown")
-        if not df_with_week.empty:
-            unique_employees = sorted(df_with_week["Employee Name"].unique())
-            selected_employee = st.selectbox("Select Employee", unique_employees, key="individual_employee")
-            if selected_employee:
-                df_employee = df_with_week[df_with_week["Employee Name"] == selected_employee].copy()
-                if not df_employee.empty:
-                    st.subheader(f"📋 Project Breakdown for {selected_employee} - {month}")
+# ============================================
+# TABS
+# ============================================
+
+tab1, tab2, tab3, tab4, tab5 = st.tabs([
+    "📊 Overview",
+    "👥 Resources",
+    "📅 Weekly View",
+    "📈 Trends",
+    "📋 Reports"
+])
+
+# ============================================
+# TAB 1: OVERVIEW
+# ============================================
+
+with tab1:
+    st.markdown(f"## 📊 Project Overview - {month}")
+    
+    # Key Metrics
+    col1, col2, col3, col4 = st.columns(4)
+    
+    total_projects = df_summary['Project'].nunique()
+    total_hours = df_summary['Hours'].sum()
+    avg_hours = df_summary.groupby('Employee Name')['Hours'].sum().mean()
+    active_employees = df_summary['Employee Name'].nunique()
+    
+    with col1:
+        st.metric("Active Projects", total_projects, help="Total unique projects this month")
+    with col2:
+        st.metric("Total Man-Days", f"{total_hours:.1f}", help="Sum of all hours worked")
+    with col3:
+        st.metric("Avg Hours/Employee", f"{avg_hours:.1f}", help="Average hours per employee")
+    with col4:
+        st.metric("Active Resources", active_employees, help="Number of employees working")
+    
+    st.markdown("---")
+    
+    # Project Summary with Chart
+    col1, col2 = st.columns([2, 1])
+    
+    with col1:
+        st.markdown("### 📋 Project Effort Summary")
+        project_summary = df_summary.groupby('Project').agg({
+            'Hours': 'sum',
+            'Employee Name': 'nunique'
+        }).reset_index()
+        project_summary.columns = ['Project', 'Total Hours', 'Resources']
+        project_summary = project_summary.sort_values('Total Hours', ascending=False).head(15)
+        
+        st.dataframe(
+            project_summary.style.format({'Total Hours': '{:.1f}'})
+            .background_gradient(subset=['Total Hours'], cmap='Blues'),
+            use_container_width=True,
+            height=400
+        )
+        
+        # Download button
+        st.download_button(
+            label="📥 Download Excel",
+            data=export_to_excel(project_summary, f"project_summary_{month}.xlsx"),
+            file_name=f"project_summary_{month}.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+    
+    with col2:
+        st.markdown("### 📊 Top Projects")
+        
+        # Create pie chart for top projects
+        top_10 = project_summary.head(10)
+        fig = px.pie(
+            top_10,
+            values='Total Hours',
+            names='Project',
+            hole=0.4,
+            color_discrete_sequence=px.colors.sequential.Purples_r
+        )
+        fig.update_traces(textposition='inside', textinfo='percent+label')
+        fig.update_layout(
+            showlegend=False,
+            height=400,
+            margin=dict(l=0, r=0, t=30, b=0)
+        )
+        st.plotly_chart(fig, use_container_width=True)
+
+# ============================================
+# TAB 2: RESOURCE ANALYSIS
+# ============================================
+
+with tab2:
+    st.markdown(f"## 👥 Resource Analysis - {month}")
+    
+    if not df_with_week.empty:
+        # Search box
+        search_employee = st.text_input("🔍 Search Employee", placeholder="Type employee name...")
+        
+        unique_employees = sorted(df_with_week["Employee Name"].unique())
+        
+        if search_employee:
+            unique_employees = [emp for emp in unique_employees if search_employee.lower() in emp.lower()]
+        
+        selected_employee = st.selectbox(
+            "Select Employee",
+            unique_employees,
+            key="resource_employee"
+        )
+        
+        if selected_employee:
+            df_employee = df_with_week[df_with_week["Employee Name"] == selected_employee].copy()
+            
+            if not df_employee.empty:
+                # Employee Stats
+                col1, col2, col3, col4 = st.columns(4)
+                
+                total_hours = df_employee['Hours'].sum()
+                projects_count = df_employee['Project'].nunique()
+                utilization = (total_hours / 22 * 100)
+                status, color = get_utilization_status(utilization)
+                
+                with col1:
+                    st.metric("Total Hours", f"{total_hours:.1f}")
+                with col2:
+                    st.metric("Projects Involved", projects_count)
+                with col3:
+                    st.metric("Utilization", f"{utilization:.1f}%")
+                with col4:
+                    st.markdown(f"<div style='background:{color}; color:white; padding:10px; border-radius:8px; text-align:center; margin-top:20px;'><strong>{status}</strong></div>", unsafe_allow_html=True)
+                
+                st.markdown("---")
+                
+                # Weekly breakdown with visualization
+                col1, col2 = st.columns([2, 1])
+                
+                with col1:
+                    st.markdown("### 📅 Weekly Project Breakdown")
                     employee_table = pd.pivot_table(
                         df_employee, values="Hours", index="Project",
                         columns="Week", aggfunc="sum", fill_value=0
@@ -525,440 +790,526 @@ if month:
                         if week not in employee_table.columns:
                             employee_table[week] = 0
                     employee_table = employee_table[["Week 1", "Week 2", "Week 3", "Week 4"]]
-                    employee_table["TOTAL (Man Days)"] = employee_table.sum(axis=1)
-                    working_days_per_month = 22
-                    employee_table["Utilization (%)"] = (employee_table["TOTAL (Man Days)"] / working_days_per_month * 100).round(2)
-                    total_row = employee_table.sum(numeric_only=True)
-                    total_row.name = "Total"
-                    total_row["Utilization (%)"] = (total_row["TOTAL (Man Days)"] / working_days_per_month * 100).round(2)
-                    employee_table = pd.concat([employee_table, total_row.to_frame().T])
-                    employee_table_sorted = employee_table.iloc[:-1].sort_values("TOTAL (Man Days)", ascending=False)
-                    employee_table = pd.concat([employee_table_sorted, employee_table.iloc[[-1]]])
-                    def format_table(df):
-                        styled_df = df.style.format({
-                            "Week 1": "{:.1f}", "Week 2": "{:.1f}", "Week 3": "{:.1f}",
-                            "Week 4": "{:.1f}", "TOTAL (Man Days)": "{:.1f}",
-                            "Utilization (%)": "{:.2f}%"
-                        })
-                        def color_utilization(val):
-                            if pd.isna(val): return ""
-                            try:
-                                num_val = float(str(val).replace('%', ''))
-                                if num_val < 50: return "background-color: #ff9800"
-                                elif num_val < 80: return "background-color: #42a5f5"
-                                elif num_val <= 100: return "background-color: #1976d2"
-                                else: return "background-color: #c62828"
-                            except: return ""
-                        styled_df = styled_df.applymap(color_utilization, subset=["Utilization (%)"])
-                        return styled_df
-                    st.dataframe(format_table(employee_table), use_container_width=True)
-                    total_utilization = employee_table.loc["Total", "Utilization (%)"]
-                    if total_utilization < 50:
-                        st.warning("🔴 Low Utilization - Employee may need more work allocation")
-                    elif total_utilization > 120:
-                        st.error("🔴 Over-Utilization - Employee may be overloaded")
-                    elif total_utilization > 100:
-                        st.warning("🟡 High Utilization - Monitor workload carefully")
-                    else:
-                        st.success("🟢 Good Utilization - Well balanced workload")
-                else:
-                    st.info(f"No data found for {selected_employee} in {month}")
-        else:
-            st.warning("No valid date data found for individual employee analysis")
+                    employee_table["TOTAL"] = employee_table.sum(axis=1)
+                    employee_table["Utilization %"] = (employee_table["TOTAL"] / 22 * 100).round(2)
+                    
+                    # Sort by total
+                    employee_table = employee_table.sort_values("TOTAL", ascending=False)
+                    
+                    st.dataframe(
+                        employee_table.style.format({
+                            "Week 1": "{:.1f}", "Week 2": "{:.1f}",
+                            "Week 3": "{:.1f}", "Week 4": "{:.1f}",
+                            "TOTAL": "{:.1f}", "Utilization %": "{:.1f}%"
+                        }).background_gradient(subset=['TOTAL'], cmap='RdYlGn'),
+                        use_container_width=True
+                    )
+                
+                with col2:
+                    st.markdown("### 📊 Weekly Trend")
+                    
+                    # Create weekly trend chart
+                    weekly_data = df_employee.groupby('Week')['Hours'].sum().reindex(['Week 1', 'Week 2', 'Week 3', 'Week 4'], fill_value=0)
+                    
+                    fig = go.Figure()
+                    fig.add_trace(go.Bar(
+                        x=['W1', 'W2', 'W3', 'W4'],
+                        y=weekly_data.values,
+                        marker_color=['#667eea', '#764ba2', '#f093fb', '#4facfe'],
+                        text=weekly_data.values,
+                        texttemplate='%{text:.1f}h',
+                        textposition='outside'
+                    ))
+                    fig.update_layout(
+                        showlegend=False,
+                        height=300,
+                        margin=dict(l=0, r=0, t=30, b=0),
+                        yaxis_title="Hours"
+                    )
+                    st.plotly_chart(fig, use_container_width=True)
 
-        # Could add Month-on-Month and Overall Dashboard here similarly, loading data only on demand
-    # Add below inside your main app logic section (after the Individual Employee Project Breakdown)
+# ============================================
+# TAB 3: WEEKLY VIEW
+# ============================================
 
-    if month:
-                # ---------- NEW: DAILY/WEEKLY NAVIGATION TABLE ----------
-        st.subheader("🗓️ Daily Employee Effort Table (Per Project, by Week)")
-
-        if not df_with_week.empty:
-            all_employee_names = sorted(df_with_week["Employee Name"].unique())
-            selected_emp_daily = st.selectbox("Select Employee for Daily Effort Table", all_employee_names, key="daily_employee")
+with tab3:
+    st.markdown(f"## 📅 Weekly Breakdown - {month}")
+    
+    if not df_with_week.empty:
+        # Project Weekly View
+        st.markdown("### 📊 Weekly Resource Effort by Project")
+        
+        unique_projects = sorted(df_with_week["Project"].unique())
+        selected_project = st.selectbox("Select Project", unique_projects, key="weekly_project")
+        
+        if selected_project:
+            df_proj = df_with_week[df_with_week["Project"] == selected_project].copy()
             
-            # Prepare employee data with valid dates
+            if not df_proj.empty:
+                col1, col2 = st.columns([2, 1])
+                
+                with col1:
+                    weekly_table = pd.pivot_table(
+                        df_proj, values="Hours", index="Employee Name",
+                        columns="Week", aggfunc="sum", fill_value=0
+                    )
+                    for week in ["Week 1", "Week 2", "Week 3", "Week 4"]:
+                        if week not in weekly_table.columns:
+                            weekly_table[week] = 0
+                    weekly_table = weekly_table[["Week 1", "Week 2", "Week 3", "Week 4"]]
+                    weekly_table["TOTAL"] = weekly_table.sum(axis=1)
+                    weekly_table = weekly_table.sort_values("TOTAL", ascending=False)
+                    
+                    st.dataframe(
+                        weekly_table.style.format("{:.1f}")
+                        .background_gradient(subset=["TOTAL"], cmap='RdYlGn'),
+                        use_container_width=True
+                    )
+                
+                with col2:
+                    st.markdown("### 📈 Resource Distribution")
+                    
+                    # Stacked bar chart for weekly distribution
+                    fig = go.Figure()
+                    
+                    colors = ['#667eea', '#764ba2', '#f093fb', '#4facfe']
+                    for i, week in enumerate(['Week 1', 'Week 2', 'Week 3', 'Week 4']):
+                        if week in weekly_table.columns:
+                            fig.add_trace(go.Bar(
+                                name=week,
+                                x=weekly_table.index[:5],  # Top 5 employees
+                                y=weekly_table[week][:5],
+                                marker_color=colors[i]
+                            ))
+                    
+                    fig.update_layout(
+                        barmode='stack',
+                        height=400,
+                        margin=dict(l=0, r=0, t=30, b=0),
+                        yaxis_title="Hours",
+                        xaxis_title="Employee"
+                    )
+                    st.plotly_chart(fig, use_container_width=True)
+        
+        st.markdown("---")
+        
+        # Daily Employee Effort Table
+        st.markdown("### 🗓️ Daily Employee Effort Table")
+        
+        all_employees = sorted(df_with_week["Employee Name"].unique())
+        selected_emp_daily = st.selectbox("Select Employee for Daily View", all_employees, key="daily_emp")
+        
+        if selected_emp_daily:
             emp_data = df_with_week[df_with_week["Employee Name"] == selected_emp_daily].copy()
-            emp_data = emp_data[~pd.to_datetime(emp_data["Date"], errors='coerce').isna()]
+            emp_data['Date_parsed'] = pd.to_datetime(emp_data["Date"], errors='coerce')
+            emp_data = emp_data[~emp_data['Date_parsed'].isna()]
             
             if not emp_data.empty:
-                # Get all weeks for this employee's data
-                weeks = get_weeks_for_month(emp_data)
-                if weeks:
-                    # Initialize week position in session state (unique per employee)
-                    if f"{selected_emp_daily}_week_pos" not in st.session_state:
-                        st.session_state[f"{selected_emp_daily}_week_pos"] = 0
+                # Get all unique dates and create weeks
+                dates = emp_data['Date_parsed'].sort_values().unique()
+                if len(dates) > 0:
+                    min_date = pd.Timestamp(dates[0])
+                    max_date = pd.Timestamp(dates[-1])
                     
-                    total_weeks = len(weeks)
+                    weeks = []
+                    curr = min_date
+                    while curr <= max_date:
+                        week_end = curr + pd.Timedelta(days=6)
+                        weeks.append((curr, week_end))
+                        curr = week_end + pd.Timedelta(days=1)
                     
-                    # Navigation controls
-                    col1, col2, col3 = st.columns([1,2,1])
-                    with col1:
-                        if st.button("< Previous Week", key=f"prev_{selected_emp_daily}",
-                                     disabled=st.session_state[f"{selected_emp_daily}_week_pos"]==0):
-                            st.session_state[f"{selected_emp_daily}_week_pos"] = max(0,
-                                st.session_state[f"{selected_emp_daily}_week_pos"] - 1)
-                    with col3:
-                        if st.button("Next Week >", key=f"next_{selected_emp_daily}",
-                                     disabled=st.session_state[f"{selected_emp_daily}_week_pos"]==(total_weeks-1)):
-                            st.session_state[f"{selected_emp_daily}_week_pos"] = min(total_weeks-1,
-                                st.session_state[f"{selected_emp_daily}_week_pos"] + 1)
-                    
-                    # Current week information
-                    week_start, week_end = weeks[st.session_state[f"{selected_emp_daily}_week_pos"]]
-                    st.markdown(f"**Week {st.session_state[f'{selected_emp_daily}_week_pos'] + 1} of {total_weeks}:** {week_start.strftime('%Y-%m-%d')} to {week_end.strftime('%Y-%m-%d')}")
-                    
-                    # Filter data for current week
-                    week_df = filter_df_by_week(emp_data, week_start, week_end)
-                    
-                    if not week_df.empty:
-                        # Format dates for column headers
-                        week_df["Date_formatted"] = week_df["Date_parsed"].dt.strftime("%a %d-%b")
+                    if weeks:
+                        # Week navigation
+                        if f"{selected_emp_daily}_week_pos" not in st.session_state:
+                            st.session_state[f"{selected_emp_daily}_week_pos"] = 0
                         
-                        # Create all 7 days for the week
-                        #displayed_cols = [(week_start + timedelta(days=i)).strftime("%a %d-%b") for i in range(7)]
-                        displayed_cols = [(week_start + pd.Timedelta(days=i)).strftime("%a %d-%b") for i in range(7)]
-
+                        total_weeks = len(weeks)
                         
-                        # Create pivot table: Projects as rows, Days as columns
-                        result_pivot = pd.pivot_table(
-                            week_df,
-                            values="Hours",
-                            index="Project",
-                            columns="Date_formatted",
-                            aggfunc="sum",
-                            fill_value=0
-                        )
+                        col1, col2, col3 = st.columns([1, 2, 1])
+                        with col1:
+                            if st.button("◀ Previous", key=f"prev_{selected_emp_daily}",
+                                       disabled=st.session_state[f"{selected_emp_daily}_week_pos"]==0):
+                                st.session_state[f"{selected_emp_daily}_week_pos"] -= 1
+                        with col2:
+                            week_start, week_end = weeks[st.session_state[f"{selected_emp_daily}_week_pos"]]
+                            st.markdown(f"<div style='text-align:center; padding:10px; background:#667eea; color:white; border-radius:8px;'><strong>Week {st.session_state[f'{selected_emp_daily}_week_pos'] + 1} of {total_weeks}</strong><br>{week_start.strftime('%b %d')} - {week_end.strftime('%b %d, %Y')}</div>", unsafe_allow_html=True)
+                        with col3:
+                            if st.button("Next ▶", key=f"next_{selected_emp_daily}",
+                                       disabled=st.session_state[f"{selected_emp_daily}_week_pos"]==(total_weeks-1)):
+                                st.session_state[f"{selected_emp_daily}_week_pos"] += 1
                         
-                        # Ensure all 7 days are present as columns
-                        for col in displayed_cols:
-                            if col not in result_pivot.columns:
-                                result_pivot[col] = 0
+                        # Filter data for current week
+                        week_start, week_end = weeks[st.session_state[f"{selected_emp_daily}_week_pos"]]
+                        mask = (emp_data["Date_parsed"] >= week_start) & (emp_data["Date_parsed"] <= week_end)
+                        week_df = emp_data[mask].copy()
                         
-                        # Reorder columns to show days in sequence
-                        result_pivot = result_pivot[displayed_cols]
-                        
-                        # Add total column
-                        result_pivot["TOTAL (Hours)"] = result_pivot.sum(axis=1)
-                        
-                        # Sort by total hours (highest first)
-                        result_pivot = result_pivot.sort_values("TOTAL (Hours)", ascending=False)
-                        
-                        # Display the table
-                        st.dataframe(result_pivot.style.format("{:.1f}"), use_container_width=True)
-                    else:
-                        st.info("No effort data for this week.")
-                else:
-                    st.info("No week data found for this employee.")
-            else:
-                st.info("No records with valid dates for the selected employee.")
-        else:
-            st.warning("No valid data for daily effort analysis.")
-
-        # Using df_all_time from previously computed only for selected month (if you want all months for MOM tables, consider caching all months carefully)
-        # To avoid high API usage, analyze only all available months if needed - else use the selected month data.
-
-        # For Month-on-Month Project Resource Analysis (per selected project)
-        st.subheader("📊 Month-on-Month Project Resource Analysis")
-        if not df_all_time.empty:
-            all_projects_mom = sorted(df_all_time["Project"].dropna().unique())
-            selected_project_mom = st.selectbox(
-                "Select Project for Month-on-Month Analysis",
-                all_projects_mom,
-                key="mom_project_selection"
-            )
-            if selected_project_mom:
-                # For month-on-month, we need to process multiple months of data
-                # Let's cache and load all selected months used for MOM
-                # To reduce API calls, check if you want to limit number of months or cache all months upfront
-
-                # For demonstration, load all months:
-                # Warning: This may increase API calls.
-                df_all_months = analyze_all_months(all_months, SHEET_URLS, emp_name_map, emp_designation_map)
-
-                def create_month_on_month_project_table(df_all, selected_project, current_month, all_months):
-                    expected_map = get_expected_effort_map_cached()
-                    planned_effort = expected_map.get(selected_project, 0)
-                    project_data = df_all[df_all["Project"] == selected_project].copy()
-
-                    if project_data.empty:
-                        return pd.DataFrame(), []
-
-                    try:
-                        current_month_idx = all_months.index(current_month)
-                    except ValueError:
-                        return pd.DataFrame(), []
-
-                    display_months = []
-                    month_labels = []
-
-                    for offset in [2, 1, 0]:
-                        target_idx = current_month_idx - offset
-                        if 0 <= target_idx < len(all_months):
-                            month_name = all_months[target_idx]
-                            display_months.append(month_name)
-                            month_labels.append(month_name)
+                        if not week_df.empty:
+                            week_df["Date_formatted"] = week_df["Date_parsed"].dt.strftime("%a %d-%b")
+                            displayed_cols = [(week_start + pd.Timedelta(days=i)).strftime("%a %d-%b") for i in range(7)]
+                            
+                            result_pivot = pd.pivot_table(
+                                week_df,
+                                values="Hours",
+                                index="Project",
+                                columns="Date_formatted",
+                                aggfunc="sum",
+                                fill_value=0
+                            )
+                            
+                            for col in displayed_cols:
+                                if col not in result_pivot.columns:
+                                    result_pivot[col] = 0
+                            
+                            result_pivot = result_pivot[displayed_cols]
+                            result_pivot["TOTAL"] = result_pivot.sum(axis=1)
+                            result_pivot = result_pivot.sort_values("TOTAL", ascending=False)
+                            
+                            st.dataframe(
+                                result_pivot.style.format("{:.1f}")
+                                .background_gradient(subset=["TOTAL"], cmap='Blues'),
+                                use_container_width=True
+                            )
                         else:
-                            placeholder_name = f"NoData-{offset}"
-                            display_months.append(placeholder_name)
-                            if offset == 2:
-                                month_labels.append("2 Months Ago")
-                            elif offset == 1:
-                                month_labels.append("1 Month Ago")
-                            else:
-                                month_labels.append("Current")
+                            st.info("No data for this week")
 
-                    all_project_resources = project_data["Employee Name"].unique()
-                    if len(all_project_resources) == 0:
-                        return pd.DataFrame(), display_months
+# ============================================
+# TAB 4: TRENDS & ANALYTICS
+# ============================================
 
-                    table_data = []
-                    for resource in sorted(all_project_resources):
-                        resource_data = project_data[project_data["Employee Name"] == resource]
-                        row = {"Resource": resource}
-                        total_effort = 0
-                        for i, month_name in enumerate(display_months):
-                            if month_name.startswith("NoData-"):
-                                row[f"M{i+1}"] = 0.0
-                            else:
-                                month_effort = resource_data[resource_data["Month"] == month_name]["Hours"].sum()
-                                row[f"M{i+1}"] = month_effort
-                                total_effort += month_effort
-                        row["TOTAL Effort (Man Days)"] = total_effort
-                        planned_per_resource = planned_effort / len(all_project_resources) if len(all_project_resources) > 0 and planned_effort > 0 else 0
-                        row["Planned Effort (Man Days)"] = planned_per_resource
-                        table_data.append(row)
-
-                    total_row = {"Resource": "Total"}
-                    for i in range(1, 4):
-                        total_row[f"M{i}"] = sum(row[f"M{i}"] for row in table_data)
-                    total_row["TOTAL Effort (Man Days)"] = sum(row["TOTAL Effort (Man Days)"] for row in table_data)
-                    total_row["Planned Effort (Man Days)"] = planned_effort
-                    table_data.append(total_row)
-                    return pd.DataFrame(table_data), month_labels
-
-                mom_table, month_labels = create_month_on_month_project_table(
-                    df_all_months, selected_project_mom, month, all_months
-                )
-                if not mom_table.empty:
-                    st.markdown(f"#### 📈 Month-on-Month Analysis: {selected_project_mom}")
-                    st.markdown(f"**Months:** M1 ({month_labels[0]}) → M2 ({month_labels[1]}) → M3 ({month_labels[2]})")
-                    display_table = mom_table.copy()
-                    for i, month_label in enumerate(month_labels):
-                        old_col = f"M{i+1}"
-                        new_col = f"M{i+1} ({month_label})"
-                        if old_col in display_table.columns:
-                            display_table = display_table.rename(columns={old_col: new_col})
-                    styled_table = display_table.style.format({
-                        col: "{:.1f}" for col in display_table.columns
-                        if col not in ["Resource"] and col in display_table.select_dtypes(include=[int, float]).columns
-                    }).background_gradient(
-                        subset=["TOTAL Effort (Man Days)", "Planned Effort (Man Days)"],
-                        cmap="RdYlGn"
-                    )
-                    st.dataframe(styled_table, use_container_width=True)
-                else:
-                    st.info(f"No data found for project: {selected_project_mom}")
-        else:
-            st.info("No all-time data available for Month-on-Month project resource analysis.")
-
-        # Month-on-Month Project Dashboard (Overall)
-        st.subheader("📋 A. Project Dashboard: Month on Month")
-        # st.write("DEBUG: Raw Master Sheet Data (first 5 rows, first 5 cols)")
-        # try:
-        #     result = sheets_service.spreadsheets().values().get(
-        #         spreadsheetId=MASTER_SHEET_ID,
-        #         range="Project Master"
-        #     ).execute()
-        #     raw_values = result.get('values', [])
-        #     st.write("Total rows:", len(raw_values))
-        #     for i, row in enumerate(raw_values[:5]):
-        #         st.write(f"Row {i}: {row[:5] if len(row) >= 5 else row}")
-        # except Exception as e:
-        #     st.error(f"Error: {e}")
-        if not df_all_time.empty:
-            def create_project_dashboard_month_on_month(df_all_time, current_month, all_months):
-                try:
-                    current_month_idx = all_months.index(current_month)
-                except ValueError:
-                    return pd.DataFrame(), []
-
+with tab4:
+    st.markdown("## 📈 Month-on-Month Trends")
+    
+    # Load all months data
+    with st.spinner("Loading trend data..."):
+        df_all_months = analyze_all_months(all_months, SHEET_URLS, emp_name_map, emp_designation_map)
+    
+    if not df_all_months.empty:
+        # Project MoM Analysis
+        st.markdown("### 📊 Project Resource Analysis")
+        
+        all_projects = sorted(df_all_months["Project"].dropna().unique())
+        selected_proj_mom = st.selectbox("Select Project", all_projects, key="mom_project")
+        
+        if selected_proj_mom:
+            try:
+                current_month_idx = all_months.index(month)
                 display_months = []
                 month_labels = []
-
+                
                 for offset in [2, 1, 0]:
                     target_idx = current_month_idx - offset
                     if 0 <= target_idx < len(all_months):
                         month_name = all_months[target_idx]
                         display_months.append(month_name)
                         month_labels.append(month_name)
-                    else:
-                        placeholder_name = f"NoData-{offset}"
-                        display_months.append(placeholder_name)
-                        month_labels.append("No Data")
+                
+                if len(display_months) >= 2:
+                    project_data = df_all_months[df_all_months["Project"] == selected_proj_mom]
+                    
+                    col1, col2 = st.columns([2, 1])
+                    
+                    with col1:
+                        # Create MoM table
+                        all_resources = sorted(project_data["Employee Name"].unique())
+                        table_data = []
+                        
+                        for resource in all_resources:
+                            resource_data = project_data[project_data["Employee Name"] == resource]
+                            row = {"Resource": resource}
+                            
+                            for i, month_name in enumerate(display_months):
+                                month_effort = resource_data[resource_data["Month"] == month_name]["Hours"].sum()
+                                row[month_labels[i]] = month_effort
+                            
+                            row["TOTAL"] = sum([row[m] for m in month_labels])
+                            table_data.append(row)
+                        
+                        mom_table = pd.DataFrame(table_data)
+                        
+                        if not mom_table.empty:
+                            # Add totals row
+                            total_row = {"Resource": "TOTAL"}
+                            for m in month_labels:
+                                total_row[m] = mom_table[m].sum()
+                            total_row["TOTAL"] = mom_table["TOTAL"].sum()
+                            
+                            mom_table = pd.concat([mom_table, pd.DataFrame([total_row])], ignore_index=True)
+                            
+                            st.dataframe(
+                                mom_table.style.format({col: "{:.1f}" for col in month_labels + ["TOTAL"]})
+                                .background_gradient(subset=month_labels + ["TOTAL"], cmap='RdYlGn'),
+                                use_container_width=True
+                            )
+                    
+                    with col2:
+                        st.markdown("### 📈 Effort Trend")
+                        
+                        # Line chart for trend
+                        trend_data = []
+                        for m in month_labels:
+                            total = mom_table[mom_table["Resource"] == "TOTAL"][m].values[0]
+                            trend_data.append(total)
+                        
+                        fig = go.Figure()
+                        fig.add_trace(go.Scatter(
+                            x=month_labels,
+                            y=trend_data,
+                            mode='lines+markers+text',
+                            marker=dict(size=12, color='#667eea'),
+                            line=dict(width=3, color='#764ba2'),
+                            text=[f"{v:.1f}h" for v in trend_data],
+                            textposition="top center"
+                        ))
+                        fig.update_layout(
+                            height=300,
+                            margin=dict(l=0, r=0, t=30, b=0),
+                            yaxis_title="Total Hours",
+                            showlegend=False
+                        )
+                        st.plotly_chart(fig, use_container_width=True)
+                        
+            except ValueError:
+                st.warning("Current month not found in available months")
+        
+        st.markdown("---")
+        
+        # Overall utilization trend
+        st.markdown("### 📊 Overall Team Utilization Trend")
+        
+        # Calculate monthly utilization
+        monthly_util = []
+        for m in all_months[-6:]:  # Last 6 months
+            month_data = df_all_months[df_all_months["Month"] == m]
+            if not month_data.empty:
+                total_hours = month_data["Hours"].sum()
+                total_employees = month_data["Employee Name"].nunique()
+                util = (total_hours / (total_employees * 22) * 100) if total_employees > 0 else 0
+                monthly_util.append({"Month": m, "Utilization": util})
+        
+        if monthly_util:
+            util_df = pd.DataFrame(monthly_util)
+            
+            fig = go.Figure()
+            fig.add_trace(go.Bar(
+                x=util_df["Month"],
+                y=util_df["Utilization"],
+                marker_color=['#4caf50' if u >= 80 and u <= 100 else '#ffc107' if u >= 50 else '#f44336' for u in util_df["Utilization"]],
+                text=[f"{u:.1f}%" for u in util_df["Utilization"]],
+                textposition='outside'
+            ))
+            
+            # Add target line
+            fig.add_hline(y=80, line_dash="dash", line_color="green", annotation_text="Target: 80%")
+            
+            fig.update_layout(
+                height=400,
+                margin=dict(l=0, r=0, t=30, b=0),
+                yaxis_title="Utilization %",
+                xaxis_title="Month",
+                showlegend=False
+            )
+            st.plotly_chart(fig, use_container_width=True)
 
-                all_projects = sorted(df_all_time["Project"].dropna().unique())
-                expected_map = get_expected_effort_map_cached()
-                table_data = []
+# ============================================
+# TAB 5: REPORTS & DASHBOARDS
+# ============================================
 
-                for project in all_projects:
-                    project_data = df_all_time[df_all_time["Project"] == project]
-                    row = {"Project": project}
-                    total_effort = 0
-                    for i, month_name in enumerate(display_months):
-                        if month_name.startswith("NoData-"):
-                            row[f"M{i+1}"] = 0.0
-                        else:
+with tab5:
+    st.markdown("## 📋 Executive Reports")
+    
+    # Project Dashboard
+    st.markdown("### A. Project Dashboard: Month on Month")
+    
+    with st.spinner("Generating project dashboard..."):
+        df_all_months_proj = analyze_all_months(all_months, SHEET_URLS, emp_name_map, emp_designation_map)
+        
+        if not df_all_months_proj.empty:
+            try:
+                current_month_idx = all_months.index(month)
+                display_months = []
+                month_labels = []
+                
+                for offset in [2, 1, 0]:
+                    target_idx = current_month_idx - offset
+                    if 0 <= target_idx < len(all_months):
+                        month_name = all_months[target_idx]
+                        display_months.append(month_name)
+                        month_labels.append(month_name)
+                
+                if display_months:
+                    st.markdown(f"**Timeline:** {' → '.join(month_labels)}")
+                    
+                    all_projects = sorted(df_all_months_proj["Project"].dropna().unique())
+                    expected_map = get_expected_effort_map_cached()
+                    
+                    table_data = []
+                    for project in all_projects:
+                        project_data = df_all_months_proj[df_all_months_proj["Project"] == project]
+                        row = {"Project": project}
+                        
+                        for i, month_name in enumerate(display_months):
                             month_effort = project_data[project_data["Month"] == month_name]["Hours"].sum()
                             row[f"M{i+1}"] = month_effort
-                            total_effort += month_effort
-                    row["Total"] = total_effort
-                    row["Effort Planned"] = expected_map.get(project, 0)
-                    table_data.append(row)
-                return pd.DataFrame(table_data), month_labels
-
-            # For the overall dashboard, load all months data too (you may cache this)
-            df_all_months_for_proj = analyze_all_months(all_months, SHEET_URLS, emp_name_map, emp_designation_map)
-
-            project_mom_table, project_mom_labels = create_project_dashboard_month_on_month(
-                df_all_months_for_proj, month, all_months
-            )
-            if not project_mom_table.empty:
-                display_project_table = project_mom_table.copy()
-                st.markdown(f"**Timeline:** {project_mom_labels[0]} → {project_mom_labels[1]} → {project_mom_labels[2]}")
-                styled_project_table = display_project_table.style.format({
-                    col: "{:.1f}" for col in display_project_table.columns
-                    if col not in ["Project"] and col in display_project_table.select_dtypes(include=[int, float]).columns
-                })
-                st.dataframe(styled_project_table, use_container_width=True)
-            else:
-                st.info("No project data available for dashboard")
-        else:
-            st.info("No all-time data available for Month-on-Month project dashboard")
-
-        # Overall Dashboard: Individual dashboard for the selected month
-        st.subheader(f"📋 B. Individual Dashboard: {month}")
-        individual_dashboard_table = None
-        if not df_all_time.empty:
-            def create_individual_dashboard(df_all_time, current_month, emp_designation_map):
-                current_data = df_all_time[df_all_time["Month"] == current_month].copy()
-                if current_data.empty:
-                    return pd.DataFrame()
-
-                # def assign_week_simple(date_str):
-                #     try:
-                #         date_str = str(date_str).strip()
-                #         formats = ["%m/%d/%Y", "%d/%m/%Y", "%Y-%m-%d", "%d-%m-%Y", "%m-%d-%Y"]
-                #         for fmt in formats:
-                #             try:
-                #                 dt = datetime.strptime(date_str, fmt)
-                #                 day = dt.day
-                #                 if day <= 7:
-                #                     return "W1"
-                #                 elif day <= 14:
-                #                     return "W2"
-                #                 elif day <= 21:
-                #                     return "W3"
-                #                 else:
-                #                     return "W4"
-                #             except ValueError:
-                #                 continue
-                #         return "W1"
-                #     except:
-                #         return "W1"
-
-                def assign_week_simple(date_str):
-                    try:
-                        date_str = str(date_str).strip()
-                       # formats = ["%m/%d/%Y", "%d/%m/%Y", "%Y-%m-%d", "%d-%m-%Y", "%m-%d-%Y"]
-                        formats = [
-                                "%m/%d/%Y", "%m-%d-%Y", "%d/%m/%Y", "%Y-%m-%d", "%d-%m-%Y",
-                                "%m/%d/%y", "%d/%m/%y",
-                            ]
-                        for fmt in formats:
-                            try:
-                                dt = datetime.strptime(date_str, fmt)
-                                day = dt.day
-                                if 1 <= day <= 7:
-                                    return "W1"
-                                elif 8 <= day <= 14:
-                                    return "W2"
-                                elif 15 <= day <= 21:
-                                    return "W3"
-                                elif 22 <= day <= 31:
-                                    return "W4"
-                                else:
-                                    return "W1"
-                            except ValueError:
-                                continue
-                        return "W1"
-                    except:
-                        return "W1"
-
-                current_data["Week"] = current_data["Date"].apply(assign_week_simple)
-                all_employees = sorted(current_data["Employee Name"].unique())
-                table_data = []
-
-                for employee in all_employees:
-                    emp_data = current_data[current_data["Employee Name"] == employee]
-                    emp_id = emp_data["Employee ID"].iloc[0] if not emp_data.empty else "Unknown"
-                    designation = emp_designation_map.get(emp_id, "Unknown")
-                    weekly_pivot = pd.pivot_table(
-                        emp_data,
-                        values="Hours",
-                        columns="Week",
-                        aggfunc="sum",
-                        fill_value=0
+                        
+                        row["Total"] = sum([row[f"M{i+1}"] for i in range(len(display_months))])
+                        row["Planned"] = expected_map.get(project, 0)
+                        row["Variance"] = row["Total"] - row["Planned"]
+                        
+                        table_data.append(row)
+                    
+                    project_dashboard = pd.DataFrame(table_data)
+                    project_dashboard = project_dashboard.sort_values("Total", ascending=False)
+                    
+                    # Rename columns
+                    for i, label in enumerate(month_labels):
+                        project_dashboard = project_dashboard.rename(columns={f"M{i+1}": label})
+                    
+                    # Style the dataframe
+                    def color_variance(val):
+                        if pd.isna(val) or val == 0:
+                            return ''
+                        color = '#d1fae5' if val >= 0 else '#fee2e2'
+                        return f'background-color: {color}'
+                    
+                    st.dataframe(
+                        project_dashboard.style.format({
+                            col: "{:.1f}" for col in month_labels + ["Total", "Planned", "Variance"]
+                        })
+                        .applymap(color_variance, subset=["Variance"])
+                        .background_gradient(subset=["Total"], cmap='Blues'),
+                        use_container_width=True,
+                        height=500
                     )
-                    row = {
-                        "Resource": employee,
-                        "Designation": designation,
-                        "W1": float(weekly_pivot.get("W1", 0)),
-                        "W2": float(weekly_pivot.get("W2", 0)),
-                        "W3": float(weekly_pivot.get("W3", 0)),
-                        "W4": float(weekly_pivot.get("W4", 0))
-                    }
-                    total_man_days = row["W1"] + row["W2"] + row["W3"] + row["W4"]
-                    row["Total (Man Days)"] = float(total_man_days)
-                    working_days_per_month = 22
-                    utilization = (total_man_days / working_days_per_month * 100) if working_days_per_month > 0 else 0
-                    row["Utilization (%)"] = f"{utilization:.1f}%"
-                    table_data.append(row)
-                return pd.DataFrame(table_data)
+                    
+                    # Download button
+                    st.download_button(
+                        label="📥 Download Project Dashboard",
+                        data=export_to_excel(project_dashboard, f"project_dashboard_{month}.xlsx"),
+                        file_name=f"project_dashboard_{month}.xlsx",
+                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                    )
+                    
+            except ValueError:
+                st.warning("Current month not found")
+    
+    st.markdown("---")
+    
+    # Individual Dashboard
+    st.markdown("### B. Individual Resource Dashboard")
+    
+    with st.spinner("Generating individual dashboard..."):
+        current_data = df_all_months_proj[df_all_months_proj["Month"] == month].copy()
+        
+        if not current_data.empty:
+            def assign_week_simple(date_str):
+                try:
+                    date_str = str(date_str).strip()
+                    formats = ["%m/%d/%Y", "%m-%d-%Y", "%d/%m/%Y", "%Y-%m-%d", "%d-%m-%Y"]
+                    for fmt in formats:
+                        try:
+                            dt = datetime.strptime(date_str, fmt)
+                            day = dt.day
+                            if 1 <= day <= 7:
+                                return "W1"
+                            elif 8 <= day <= 14:
+                                return "W2"
+                            elif 15 <= day <= 21:
+                                return "W3"
+                            elif 22 <= day <= 31:
+                                return "W4"
+                        except ValueError:
+                            continue
+                    return "W1"
+                except:
+                    return "W1"
+            
+            current_data["Week"] = current_data["Date"].apply(assign_week_simple)
+            all_employees = sorted(current_data["Employee Name"].unique())
+            
+            table_data = []
+            for employee in all_employees:
+                emp_data = current_data[current_data["Employee Name"] == employee]
+                emp_id = emp_data["Employee ID"].iloc[0] if not emp_data.empty else "Unknown"
+                designation = emp_designation_map.get(emp_id, "Unknown")
+                
+                weekly_pivot = pd.pivot_table(
+                    emp_data,
+                    values="Hours",
+                    columns="Week",
+                    aggfunc="sum",
+                    fill_value=0
+                )
+                
+                row = {
+                    "Resource": employee,
+                    "Designation": designation,
+                    "W1": float(weekly_pivot.get("W1", 0)),
+                    "W2": float(weekly_pivot.get("W2", 0)),
+                    "W3": float(weekly_pivot.get("W3", 0)),
+                    "W4": float(weekly_pivot.get("W4", 0))
+                }
+                
+                total_man_days = row["W1"] + row["W2"] + row["W3"] + row["W4"]
+                row["Total"] = float(total_man_days)
+                utilization = (total_man_days / 22 * 100) if 22 > 0 else 0
+                row["Utilization %"] = f"{utilization:.1f}%"
+                
+                table_data.append(row)
+            
+            individual_dashboard = pd.DataFrame(table_data)
+            individual_dashboard = individual_dashboard.sort_values("Total", ascending=False)
+            
+            # Color coding for utilization
+            def color_utilization(val):
+                if isinstance(val, str) and '%' in val:
+                    try:
+                        num_val = float(val.replace('%', ''))
+                        if num_val < 50:
+                            return 'background-color: #fee2e2; color: #991b1b'
+                        elif num_val < 80:
+                            return 'background-color: #fef3c7; color: #92400e'
+                        elif num_val <= 100:
+                            return 'background-color: #d1fae5; color: #065f46'
+                        else:
+                            return 'background-color: #fee2e2; color: #991b1b'
+                    except:
+                        return ''
+                return ''
+            
+            st.dataframe(
+                individual_dashboard.style.format({
+                    "W1": "{:.1f}", "W2": "{:.1f}",
+                    "W3": "{:.1f}", "W4": "{:.1f}",
+                    "Total": "{:.1f}"
+                })
+                .applymap(color_utilization, subset=["Utilization %"])
+                .background_gradient(subset=["Total"], cmap='Blues'),
+                use_container_width=True,
+                height=500
+            )
+            
+            # Download button
+            st.download_button(
+                label="📥 Download Individual Dashboard",
+                data=export_to_excel(individual_dashboard, f"individual_dashboard_{month}.xlsx"),
+                file_name=f"individual_dashboard_{month}.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
 
-            individual_dashboard_table = create_individual_dashboard(df_all_time, month, emp_designation_map)
-            if not individual_dashboard_table.empty:
-                def format_individual_table(df):
-                    df_copy = df.copy()
-                    numeric_cols = ["W1", "W2", "W3", "W4", "Total (Man Days)"]
-                    for col in numeric_cols:
-                        if col in df_copy.columns:
-                            df_copy[col] = df_copy[col].round(1)
-                    return df_copy.style.set_properties(**{'text-align': 'center'}).set_table_styles([
-                        {'selector': 'th', 'props': [('text-align', 'center')]},
-                        {'selector': 'td', 'props': [('text-align', 'center')]}
-                    ])
-                st.dataframe(format_individual_table(individual_dashboard_table), use_container_width=True)
-            else:
-                st.info("No individual data available for current month")
-        else:
-            st.info("No all-time data available for Individual Dashboard")
+# ============================================
+# FOOTER
+# ============================================
 
-    else:
-        st.info("Please select a month to begin analysis.")
-         
-
-    # if st.button("Refresh Data"):
-    #     # Increment cache_key to invalidate cache
-    #     st.session_state["cache_key"] = cache_key + 1
-
-    # data = load_data_with_cache(st.session_state.get("cache_key", 0))
-    # st.write(data)
-
-else:
-    st.info("Please select a month to begin analysis.")
-
-
-
-# ===========================END-------------------------------END==============================END----------------------END========================== #
-
+st.markdown("---")
+st.markdown(f"""
+    <div style='text-align: center; padding: 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px; color: white; margin-top: 50px;'>
+        <h3 style='color: white; margin: 0;'>📊 TDF Project Tracker Dashboard</h3>
+        <p style='margin: 10px 0; opacity: 0.9;'>Version 1.0 | Professional Resource Management System</p>
+        <p style='margin: 5px 0; font-size: 0.9em;'>
+            Last Updated: {datetime.now().strftime("%B %d, %Y at %H:%M")}
+        </p>
+        <p style='margin: 15px 0 0 0; font-size: 0.85em; opacity: 0.8;'>
+            © 2025 TDF. All rights reserved.
+        </p>
+    </div>
+""", unsafe_allow_html=True)
