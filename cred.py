@@ -764,18 +764,18 @@ if month:
 
         # Month-on-Month Project Dashboard (Overall)
         st.subheader("📋 A. Project Dashboard: Month on Month")
-        st.write("DEBUG: Raw Master Sheet Data (first 5 rows, first 5 cols)")
-        try:
-            result = sheets_service.spreadsheets().values().get(
-                spreadsheetId=MASTER_SHEET_ID,
-                range="Project Master"
-            ).execute()
-            raw_values = result.get('values', [])
-            st.write("Total rows:", len(raw_values))
-            for i, row in enumerate(raw_values[:5]):
-                st.write(f"Row {i}: {row[:5] if len(row) >= 5 else row}")
-        except Exception as e:
-            st.error(f"Error: {e}")
+        # st.write("DEBUG: Raw Master Sheet Data (first 5 rows, first 5 cols)")
+        # try:
+        #     result = sheets_service.spreadsheets().values().get(
+        #         spreadsheetId=MASTER_SHEET_ID,
+        #         range="Project Master"
+        #     ).execute()
+        #     raw_values = result.get('values', [])
+        #     st.write("Total rows:", len(raw_values))
+        #     for i, row in enumerate(raw_values[:5]):
+        #         st.write(f"Row {i}: {row[:5] if len(row) >= 5 else row}")
+        # except Exception as e:
+        #     st.error(f"Error: {e}")
         if not df_all_time.empty:
             def create_project_dashboard_month_on_month(df_all_time, current_month, all_months):
                 try:
