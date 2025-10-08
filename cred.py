@@ -250,6 +250,33 @@ def parse_sheet_data_with_split_dates(file_id, sheet_name):
     else:
         return pd.DataFrame()
 
+# def assign_week(date_str):
+#     try:
+#         if not date_str or pd.isna(date_str) or str(date_str).strip() == "":
+#             return "Unknown"
+#         date_str = str(date_str).strip()
+#         formats = [
+#             "%m/%d/%Y", "%d/%m/%Y", "%Y-%m-%d", "%d-%m-%Y",
+#             "%m-%d-%Y", "%m/%d/%y", "%d/%m/%y",
+#         ]
+#         for fmt in formats:
+#             try:
+#                 dt = datetime.strptime(date_str, fmt)
+#                 day = dt.day
+#                 if day <= 7:
+#                     return "Week 1"
+#                 elif day <= 14:
+#                     return "Week 2"
+#                 elif day <= 21:
+#                     return "Week 3"
+#                 else:
+#                     return "Week 4"
+#             except ValueError:
+#                 continue
+#         return "Unknown"
+#     except Exception:
+#         return "Unknown"
+
 def assign_week(date_str):
     try:
         if not date_str or pd.isna(date_str) or str(date_str).strip() == "":
@@ -263,14 +290,16 @@ def assign_week(date_str):
             try:
                 dt = datetime.strptime(date_str, fmt)
                 day = dt.day
-                if day <= 7:
+                if 1 <= day <= 7:
                     return "Week 1"
-                elif day <= 14:
+                elif 8 <= day <= 14:
                     return "Week 2"
-                elif day <= 21:
+                elif 15 <= day <= 21:
                     return "Week 3"
-                else:
+                elif 22 <= day <= 31:
                     return "Week 4"
+                else:
+                    return "Unknown"
             except ValueError:
                 continue
         return "Unknown"
@@ -774,6 +803,28 @@ if month:
                 if current_data.empty:
                     return pd.DataFrame()
 
+                # def assign_week_simple(date_str):
+                #     try:
+                #         date_str = str(date_str).strip()
+                #         formats = ["%m/%d/%Y", "%d/%m/%Y", "%Y-%m-%d", "%d-%m-%Y", "%m-%d-%Y"]
+                #         for fmt in formats:
+                #             try:
+                #                 dt = datetime.strptime(date_str, fmt)
+                #                 day = dt.day
+                #                 if day <= 7:
+                #                     return "W1"
+                #                 elif day <= 14:
+                #                     return "W2"
+                #                 elif day <= 21:
+                #                     return "W3"
+                #                 else:
+                #                     return "W4"
+                #             except ValueError:
+                #                 continue
+                #         return "W1"
+                #     except:
+                #         return "W1"
+
                 def assign_week_simple(date_str):
                     try:
                         date_str = str(date_str).strip()
@@ -782,14 +833,16 @@ if month:
                             try:
                                 dt = datetime.strptime(date_str, fmt)
                                 day = dt.day
-                                if day <= 7:
+                                if 1 <= day <= 7:
                                     return "W1"
-                                elif day <= 14:
+                                elif 8 <= day <= 14:
                                     return "W2"
-                                elif day <= 21:
+                                elif 15 <= day <= 21:
                                     return "W3"
-                                else:
+                                elif 22 <= day <= 31:
                                     return "W4"
+                                else:
+                                    return "W1"
                             except ValueError:
                                 continue
                         return "W1"
