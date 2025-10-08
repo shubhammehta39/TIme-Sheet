@@ -458,10 +458,10 @@ if month:
                                      df_summary['Designation'] + ", " + df_summary['Employee ID'] + ")")
 
         df_with_week = add_week_column(df_summary)  #added lines below
-        st.write("DEBUG: Week distribution")
-        st.write(df_with_week["Week"].value_counts())
-        st.write("DEBUG: Sample dates and their weeks")
-        st.write(df_with_week[["Date", "Week"]].head(20))
+        # st.write("DEBUG: Week distribution")
+        # st.write(df_with_week["Week"].value_counts())
+        # st.write("DEBUG: Sample dates and their weeks")
+        # st.write(df_with_week[["Date", "Week"]].head(20))
 
         st.subheader("📅 Weekly Resource Effort Table")
         if not df_with_week.empty:
