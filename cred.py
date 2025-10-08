@@ -152,14 +152,36 @@ def get_employee_map_cached():
 
 @st.cache_data(ttl=3600)
 def get_expected_effort_map_cached():
-    df_effort = load_sheet_data_cached(MASTER_SHEET_ID, "Project Master")
-    if df_effort.empty or not {"ProjectList", "Project Effort Plan"}.issubset(df_effort.columns):
+    try:
+        # Load raw data from Project Master sheet
+        result = sheets_service.spreadsheets().values().get(
+            spreadsheetId=MASTER_SHEET_ID,
+            range="Project Master"
+        ).execute()
+        values = result.get('values', [])
+        
+        if len(values) < 2:
+            return {}
+        
+        # Row 0 is tracker link, Row 1 is headers, Row 2+ is data
+        headers = values[1]
+        data_rows = values[2:]
+        
+        # Create DataFrame
+        df_effort = pd.DataFrame(data_rows, columns=headers)
+        
+        if df_effort.empty or not {"ProjectList", "Project Effort Plan"}.issubset(df_effort.columns):
+            return {}
+        
+        df_effort.columns = df_effort.columns.astype(str).str.strip()
+        
+        return dict(zip(
+            df_effort["ProjectList"].astype(str).str.strip(),
+            pd.to_numeric(df_effort["Project Effort Plan"], errors="coerce").fillna(0)
+        ))
+    except Exception as e:
+        print(f"Error loading effort map: {e}")
         return {}
-    df_effort.columns = df_effort.columns.astype(str).str.strip()
-    return dict(zip(
-        df_effort["ProjectList"].astype(str).str.strip(),
-        pd.to_numeric(df_effort["Project Effort Plan"], errors="coerce").fillna(0)
-    ))
 
 # --- DATA PROCESSING (no API calls here) ---
 
