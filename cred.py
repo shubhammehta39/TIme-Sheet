@@ -453,7 +453,7 @@ if month:
             df_summary['Employee'] = (df_summary['Employee Name'] + " (" +
                                      df_summary['Designation'] + ", " + df_summary['Employee ID'] + ")")
 
-        df_with_week = add_week_column(df_summary)  added lines below
+        df_with_week = add_week_column(df_summary)  #added lines below
         st.write("DEBUG: Week distribution")
         st.write(df_with_week["Week"].value_counts())
         st.write("DEBUG: Sample dates and their weeks")
