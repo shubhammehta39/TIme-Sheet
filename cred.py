@@ -10,8 +10,10 @@ import plotly.io as pio
 import hashlib
 from dotenv import load_dotenv
 import re
+import plotly.graph_objects as go
 import os
-
+from io import BytesIO
+import io
 
 # --- CONFIGURATION ---
 SCOPES = [
@@ -545,11 +547,16 @@ def get_utilization_status(utilization):
         return "🔴 Over-utilized", "#f44336"
 
 def export_to_excel(dataframe, filename):
-    output = BytesIO()
-    with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        dataframe.to_excel(writer, index=True, sheet_name='Data')
-    output.seek(0)
-    return output
+    """Export dataframe to Excel with formatting"""
+    try:
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            dataframe.to_excel(writer, index=True, sheet_name='Data')
+        output.seek(0)
+        return output
+    except Exception as e:
+        st.error(f"Error exporting to Excel: {e}")
+        return None
 
 # ============================================
 # MAIN APP
@@ -705,12 +712,14 @@ with tab1:
         )
         
         # Download button
-        st.download_button(
-            label="📥 Download Excel",
-            data=export_to_excel(project_summary, f"project_summary_{month}.xlsx"),
-            file_name=f"project_summary_{month}.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
+        excel_data = export_to_excel(project_summary, f"project_summary_{month}.xlsx")
+        if excel_data:
+            st.download_button(
+                label="📥 Download Excel",
+                data=excel_data,
+                file_name=f"project_summary_{month}.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
     
     with col2:
         st.markdown("### 📊 Top Projects")
@@ -1182,12 +1191,14 @@ with tab5:
                     )
                     
                     # Download button
-                    st.download_button(
-                        label="📥 Download Project Dashboard",
-                        data=export_to_excel(project_dashboard, f"project_dashboard_{month}.xlsx"),
-                        file_name=f"project_dashboard_{month}.xlsx",
-                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                    )
+                    excel_data = export_to_excel(project_dashboard, f"project_dashboard_{month}.xlsx")
+                    if excel_data:
+                        st.download_button(
+                            label="📥 Download Project Dashboard",
+                            data=excel_data,
+                            file_name=f"project_dashboard_{month}.xlsx",
+                            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                        )
                     
             except ValueError:
                 st.warning("Current month not found")
@@ -1289,12 +1300,14 @@ with tab5:
             )
             
             # Download button
-            st.download_button(
-                label="📥 Download Individual Dashboard",
-                data=export_to_excel(individual_dashboard, f"individual_dashboard_{month}.xlsx"),
-                file_name=f"individual_dashboard_{month}.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            )
+            excel_data = export_to_excel(individual_dashboard, f"individual_dashboard_{month}.xlsx")
+            if excel_data:
+                st.download_button(
+                    label="📥 Download Individual Dashboard",
+                    data=excel_data,
+                    file_name=f"individual_dashboard_{month}.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                )
 
 # ============================================
 # FOOTER
