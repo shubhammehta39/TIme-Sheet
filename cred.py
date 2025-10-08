@@ -742,6 +742,10 @@ if month:
 
         # Month-on-Month Project Dashboard (Overall)
         st.subheader("📋 A. Project Dashboard: Month on Month")
+        expected_map = get_expected_effort_map_cached()
+        st.write("DEBUG: Effort Map from Master Sheet")
+        st.write(expected_map)
+        st.write("DEBUG: Projects in current data")
         if not df_all_time.empty:
             def create_project_dashboard_month_on_month(df_all_time, current_month, all_months):
                 try:
